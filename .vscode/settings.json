@@ -1,0 +1,23 @@
+{
+    "CMakeTools.configureOnOpen": true,
+    "cmake.buildDirectory": "${workspaceFolder}/Src/build",
+    "cmake.sourceDirectory": "${workspaceFolder}/Src",
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "C_Cpp.intelliSenseEngineFallback": "Disabled",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/.vscode/compile_commands.json",
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}/Src/build"
+    ],
+    "files.associations": {
+        "*.json": "jsonc",
+        "*.cpp": "cpp",
+        "*.h": "cpp",
+        "*.c": "c"
+    },
+    "editor.formatOnSave": true,
+    "cSpell.words": [
+        "picotool",
+        "stdlib"
+    ]
+}

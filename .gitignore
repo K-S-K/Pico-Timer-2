@@ -1,0 +1,12 @@
+# Prerequisites
+*.d
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Build
+build/
+
+# MacOS
+.DS_Store

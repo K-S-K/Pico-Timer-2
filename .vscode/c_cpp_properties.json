@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "Pico",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "ENV{PICO_SDK_PATH}/**",
+                "ENV{FREERTOS_KERNEL_RPI_PATH}/include/**",
+                "ENV{FREERTOS_KERNEL_RPI_PATH}/portable/ThirdParty/GCC/RP2350_ARM_NTZ/**"
+                // Add any other folders you need
+            ],
+            "defines": [
+                "PICO_ON_DEVICE=1",
+                "NDEBUG"
+            ],
+            "compilerPath": "/usr/bin/arm-none-eabi-gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-arm"
+        }
+    ],
+    "version": 4
+}
