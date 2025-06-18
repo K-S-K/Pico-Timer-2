@@ -33,6 +33,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/FreeRTOSKernelPort/FreeRTOS_Kernel_import.cma
 # add_subdirectory(Src)
 add_executable(${NAME}
         ./application/main.cpp
+        ./application/HD44780.cpp
         )
 
 # Pull in our pico_stdlib which pulls in commonly used features
