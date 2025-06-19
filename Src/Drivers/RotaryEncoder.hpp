@@ -7,6 +7,7 @@
 #pragma once
 
 #include "pico/stdlib.h"
+#include "pico/time.h"
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
@@ -23,13 +24,18 @@ struct EncoderEvent {
 
 class RotaryEncoder {
 public:
-    RotaryEncoder(uint gpioR, uint gpioL, uint gpioBtn);
+    RotaryEncoder(uint gpioL, uint gpioR, uint gpioBtn);
     void Init();
     QueueHandle_t GetEventQueue() const;
 
 private:
-    uint pinR, pinL, pinBtn;
-    bool lastR, lastL, lastBtn;
+    uint pinL, pinR, pinBtn;
+    bool lastL, lastR, lastBtn;
+
+    absolute_time_t lastRotationTime;
+    absolute_time_t lastButtonTime;
+    static constexpr uint ROTATION_DEBOUNCE_US = 5000;
+    static constexpr uint BUTTON_DEBOUNCE_US = 10000;
 
     static void EncoderTask(void *param);
     void ProcessInput();
