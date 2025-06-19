@@ -30,8 +30,7 @@ static void UserInterfaceTask(void *param) {
 
     char buffer[32];
 
-    lcd->Clear();
-    lcd->ShowText(0, 1, "Conut: 0  Flag: OFF");
+    lcd->ShowText(1, 0, "Count: 0  Flag: OFF");
 
     while (true) {
         if (xQueueReceive(q, &evt, portMAX_DELAY)) {
@@ -48,8 +47,7 @@ static void UserInterfaceTask(void *param) {
             }
 
             snprintf(buffer, sizeof(buffer), "Conut: %2d Flag: %3s", counter, flag ? "ON" : "OFF");
-            lcd->Clear();
-            lcd->ShowText(0, 1, buffer);
+            lcd->ShowText(1, 0, buffer);
 
             printf("%s\n", buffer); // Optional debug
         }
@@ -73,14 +71,13 @@ void ClockDisplayTask(void* param) {
                     snprintf(line1, sizeof(line1), "%04d-%02d-%02d %02d:%02d:%02d",
                              evt.currentTime.year, evt.currentTime.month, evt.currentTime.day,
                              evt.currentTime.hour, evt.currentTime.minute, evt.currentTime.second);
-                    lcd->ShowText(0, 2, line1);
 
-                    if (alarmIsOn) {
-                        snprintf(line2, sizeof(line2), "Alarm Bell is ON");
-                    } else {
-                        snprintf(line2, sizeof(line2), "Alarm Bell is OFF");
-                    }
-                    lcd->ShowText(0, 3, line2);
+                    snprintf(line2, sizeof(line2), 
+                            "Alarm Bell is %3s",
+                             alarmIsOn ? "ON" : "OFF");
+
+                    lcd->ShowText(2, 0, line1);
+                    lcd->ShowText(3, 0, line2);
                     break;
 
                 case ClockEventType::AlarmOn:
@@ -125,7 +122,7 @@ int main() {
   Display display(&lcd);
   display.Start();
 
-  display.ShowText(0, 0, "Hello World!");
+  display.ShowText(0, 0, "Hello, Pico Timer!");
 
   static RotaryEncoder encoder(14, 15, 13);
   encoder.Init();
@@ -155,6 +152,7 @@ int main() {
   // Start Clock UI display task
   xTaskCreate(ClockDisplayTask, "ClockDisplay", 1024, &clockCtx, 1, nullptr);
 
+  // Start the Clock
   clock.Start();
 
   /* Start the tasks and timer running. */
