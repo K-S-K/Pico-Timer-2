@@ -4,25 +4,26 @@
 */
 
 #pragma once
+
 #include <stdint.h>
 
 class HD44780 {
 public:
   HD44780(uint8_t i2c_address, int i2c_port = 0);
 
-  void init();
-  void clear();
-  void setCursor(uint8_t col, uint8_t row);
-  void print(const char *text);
-  void printChar(char c);
-  void setBacklight(bool backlight);
+  void Init();
+  void Clear();
+  void SetCursor(uint8_t row, uint8_t col);
+  void PrintString(const char *text);
+  void PrintSymbol(char c);
+  void SetBacklight(bool backlight);
 
 private:
-  void writeCommand(uint8_t cmd);
-  void writeData(uint8_t data);
-  void send(uint8_t value, uint8_t mode);
-  void pulseEnable(uint8_t data);
-  void write4Bits(uint8_t value);
+  void WriteCommand(uint8_t cmd);
+  void WriteData(uint8_t data);
+  void WriteByte(uint8_t value, uint8_t mode);
+  void WriteHalf(uint8_t value);
+  void PulseEnable(uint8_t data);
 
   uint8_t _i2c_address;
   int _i2c_port;

@@ -1,0 +1,61 @@
+/*
+  * Display.cpp - Implementation of the Display class for HD44780 LCD
+  * This class handles display commands using FreeRTOS queues.
+  * It allows for clearing the display, setting backlight, and showing text.
+  * The display commands are processed in a dedicated task loop.
+  * The class uses a queue to manage commands asynchronously.
+  * The display is assumed to be controlled by an HD44780 driver class.
+  * The display commands are processed in a FreeRTOS task, allowing for non-blocking
+  * operation and responsiveness in embedded applications.
+  * The display can be used in applications that require text output on an HD44780 LCD
+  * and can be integrated with other FreeRTOS tasks.
+*/
+
+#pragma once
+
+#include "pico/stdlib.h"
+#include "FreeRTOS.h"
+#include "queue.h"
+#include "task.h"
+#include <stdint.h>
+
+#include "../Drivers/HD44780.hpp"
+
+enum class DisplayCommandType {
+    Clear,
+    SetBacklight,
+    ShowText
+};
+
+struct DisplayCommand {
+    DisplayCommandType type;
+
+    union {
+        struct {
+            int row;
+            int col;
+            char text[32]; // adjust to LCD width
+        } showText;
+
+        struct {
+            bool on;
+        } backlight;
+    };
+};
+
+class Display {
+public:
+    Display(HD44780* lcd);
+    void Start();
+
+    void Clear();
+    void SetBacklight(bool on);
+    void ShowText(int row, int col, const char* text);
+
+private:
+    static void TaskLoop(void* param);
+    void ProcessCommand(const DisplayCommand& cmd);
+
+    QueueHandle_t commandQueue;
+    HD44780* physicalDisplay; // Assuming HD44780 is a class for the LCD driver
+};
