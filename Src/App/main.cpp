@@ -3,6 +3,7 @@
 #include <task.h>
 #include <cstdio>
 
+#include "../Clock/Clock.hpp"
 #include "../Drivers/HD44780.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 
@@ -12,10 +13,15 @@ struct UiTaskContext {
     HD44780* lcd;
 };
 
+struct ClockTaskContext {
+    QueueHandle_t clockQueue;
+    HD44780* lcd;
+};
+
 static void UserInterfaceTask(void *param) {
-    UiTaskContext* ctx = static_cast<UiTaskContext*>(param);
-    QueueHandle_t q = ctx->encoderQueue;
-    HD44780* lcd = ctx->lcd;
+    UiTaskContext* uiCtx = static_cast<UiTaskContext*>(param);
+    QueueHandle_t q = uiCtx->encoderQueue;
+    HD44780* lcd = uiCtx->lcd;
 
     EncoderEvent evt;
     bool flag = false;
@@ -24,8 +30,8 @@ static void UserInterfaceTask(void *param) {
     char buffer[32];
 
     lcd->clear();
-    lcd->setCursor(0, 0);
-    lcd->print("Cnt: 0  Flag: OFF");
+    lcd->setCursor(0, 1);
+    lcd->print("Conut: 0  Flag: OFF");
 
     while (true) {
         if (xQueueReceive(q, &evt, portMAX_DELAY)) {
@@ -41,12 +47,53 @@ static void UserInterfaceTask(void *param) {
                     break;
             }
 
-            snprintf(buffer, sizeof(buffer), "Cnt: %d  Flag: %s", counter, flag ? "ON " : "OFF");
+            snprintf(buffer, sizeof(buffer), "Conut: %2d Flag: %3s", counter, flag ? "ON" : "OFF");
             lcd->clear();
             lcd->setCursor(0, 1);
             lcd->print(buffer);
 
             printf("%s\n", buffer); // Optional debug
+        }
+    }
+}
+
+void ClockDisplayTask(void* param) {
+    ClockTaskContext* uiCtx = static_cast<ClockTaskContext*>(param);
+    QueueHandle_t q = uiCtx->clockQueue;
+    HD44780* lcd = uiCtx->lcd;
+
+    char line1[32];
+    char line2[32];
+    bool alarmIsOn = false;
+
+    while (true) {
+        ClockEvent evt;
+        if (xQueueReceive(q, &evt, portMAX_DELAY)) {
+            switch (evt.type) {
+                case ClockEventType::Tick:
+                    snprintf(line1, sizeof(line1), "%04d-%02d-%02d %02d:%02d:%02d",
+                             evt.currentTime.year, evt.currentTime.month, evt.currentTime.day,
+                             evt.currentTime.hour, evt.currentTime.minute, evt.currentTime.second);
+                    lcd->setCursor(0, 2);
+                    lcd->print(line1);
+
+                    if (alarmIsOn) {
+                        snprintf(line2, sizeof(line2), "Alarm Bell is ON");
+                    } else {
+                        snprintf(line2, sizeof(line2), "Alarm Bell is OFF");
+                    }
+                    lcd->setCursor(0, 3);
+                    lcd->print(line2);
+                    break;
+
+                case ClockEventType::AlarmOn:
+                    alarmIsOn = true;
+                    break;
+
+                case ClockEventType::AlarmOff:
+                    alarmIsOn = false;
+                    break;
+            }
         }
     }
 }
@@ -86,14 +133,31 @@ int main() {
   static RotaryEncoder encoder(14, 15, 13);
   encoder.Init();
 
-  static UiTaskContext ctx = {
+  // Create Clock instance
+  static Clock clock(4); // static so it persists
+
+  // Optional: initialize time and alarm
+  clock.SetCurrentTime({2025, 6, 19, 11, 59, 50});
+  clock.SetAlarmTime({0, 0, 0, 12, 0, 0});  // Alarm at 12:00
+  clock.SetAlarmDuty(true);
+
+
+  static UiTaskContext uiCtx = {
     .encoderQueue = encoder.GetEventQueue(),
     .lcd = &lcd
   };
 
-  // xTaskCreate(EncoderEventHandlerTask, "EncoderHandler", 512, (void*)encoder.GetEventQueue(), 1, nullptr);
+  static ClockTaskContext clockCtx = {
+    .clockQueue = clock.GetEventQueue(),
+    .lcd = &lcd
+  };
 
-  xTaskCreate(UserInterfaceTask, "UserInterface", 512, &ctx, 1, nullptr);
+  xTaskCreate(UserInterfaceTask, "UserInterface", 512, &uiCtx, 1, nullptr);
+
+  // Start Clock UI display task
+  xTaskCreate(ClockDisplayTask, "ClockDisplay", 1024, &clockCtx, 1, nullptr);
+
+  clock.Start();
 
   /* Start the tasks and timer running. */
   vTaskStartScheduler();
