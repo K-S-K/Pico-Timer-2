@@ -33,6 +33,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/FreeRTOSKernelPort/FreeRTOS_Kernel_import.cma
 # add_subdirectory(Src)
 add_executable(${NAME}
         ./App/main.cpp
+        ./Clock/Clock.cpp
         ./Drivers/HD44780.cpp
         ./Drivers/RotaryEncoder.cpp
         )
