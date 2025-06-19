@@ -119,8 +119,8 @@ int main() {
 
 
   HD44780 lcd(0x27); // This address is common for many I2C LCDs, but it may vary.
-  lcd.init();
-  lcd.clear();
+  lcd.Init();
+  lcd.Clear();
 
   Display display(&lcd);
   display.Start();
