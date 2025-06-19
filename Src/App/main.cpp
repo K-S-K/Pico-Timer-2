@@ -4,24 +4,25 @@
 #include <cstdio>
 
 #include "../Clock/Clock.hpp"
+#include "../Display/Display.hpp"
 #include "../Drivers/HD44780.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 
 
 struct UiTaskContext {
     QueueHandle_t encoderQueue;
-    HD44780* lcd;
+    Display* display;
 };
 
 struct ClockTaskContext {
     QueueHandle_t clockQueue;
-    HD44780* lcd;
+    Display* display;
 };
 
 static void UserInterfaceTask(void *param) {
     UiTaskContext* uiCtx = static_cast<UiTaskContext*>(param);
     QueueHandle_t q = uiCtx->encoderQueue;
-    HD44780* lcd = uiCtx->lcd;
+    Display* lcd = uiCtx->display;
 
     EncoderEvent evt;
     bool flag = false;
@@ -29,9 +30,8 @@ static void UserInterfaceTask(void *param) {
 
     char buffer[32];
 
-    lcd->clear();
-    lcd->setCursor(0, 1);
-    lcd->print("Conut: 0  Flag: OFF");
+    lcd->Clear();
+    lcd->ShowText(0, 1, "Conut: 0  Flag: OFF");
 
     while (true) {
         if (xQueueReceive(q, &evt, portMAX_DELAY)) {
@@ -48,9 +48,8 @@ static void UserInterfaceTask(void *param) {
             }
 
             snprintf(buffer, sizeof(buffer), "Conut: %2d Flag: %3s", counter, flag ? "ON" : "OFF");
-            lcd->clear();
-            lcd->setCursor(0, 1);
-            lcd->print(buffer);
+            lcd->Clear();
+            lcd->ShowText(0, 1, buffer);
 
             printf("%s\n", buffer); // Optional debug
         }
@@ -60,7 +59,7 @@ static void UserInterfaceTask(void *param) {
 void ClockDisplayTask(void* param) {
     ClockTaskContext* uiCtx = static_cast<ClockTaskContext*>(param);
     QueueHandle_t q = uiCtx->clockQueue;
-    HD44780* lcd = uiCtx->lcd;
+    Display* lcd = uiCtx->display;
 
     char line1[32];
     char line2[32];
@@ -74,16 +73,14 @@ void ClockDisplayTask(void* param) {
                     snprintf(line1, sizeof(line1), "%04d-%02d-%02d %02d:%02d:%02d",
                              evt.currentTime.year, evt.currentTime.month, evt.currentTime.day,
                              evt.currentTime.hour, evt.currentTime.minute, evt.currentTime.second);
-                    lcd->setCursor(0, 2);
-                    lcd->print(line1);
+                    lcd->ShowText(0, 2, line1);
 
                     if (alarmIsOn) {
                         snprintf(line2, sizeof(line2), "Alarm Bell is ON");
                     } else {
                         snprintf(line2, sizeof(line2), "Alarm Bell is OFF");
                     }
-                    lcd->setCursor(0, 3);
-                    lcd->print(line2);
+                    lcd->ShowText(0, 3, line2);
                     break;
 
                 case ClockEventType::AlarmOn:
@@ -124,11 +121,11 @@ int main() {
   HD44780 lcd(0x27); // This address is common for many I2C LCDs, but it may vary.
   lcd.init();
   lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.setBacklight(true);
-  lcd.print("Hello from Pico");
 
-  // xTaskCreate(lcd_task, "LCD", 256, nullptr, 1, nullptr);
+  Display display(&lcd);
+  display.Start();
+
+  display.ShowText(0, 0, "Hello World!");
 
   static RotaryEncoder encoder(14, 15, 13);
   encoder.Init();
@@ -144,14 +141,15 @@ int main() {
 
   static UiTaskContext uiCtx = {
     .encoderQueue = encoder.GetEventQueue(),
-    .lcd = &lcd
+    .display = &display
   };
 
   static ClockTaskContext clockCtx = {
     .clockQueue = clock.GetEventQueue(),
-    .lcd = &lcd
+    .display = &display
   };
 
+  // Start Encoder task
   xTaskCreate(UserInterfaceTask, "UserInterface", 512, &uiCtx, 1, nullptr);
 
   // Start Clock UI display task
