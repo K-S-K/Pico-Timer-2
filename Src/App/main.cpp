@@ -4,25 +4,26 @@
 #include <cstdio>
 
 #include "../Clock/Clock.hpp"
-#include "../Display/Display.hpp"
 #include "../Drivers/HD44780.hpp"
+#include "../Display/Display.hpp"
+#include "../Display/IDisplay.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 
 
 struct UiTaskContext {
     QueueHandle_t encoderQueue;
-    Display* display;
+    IDisplay* display;
 };
 
 struct ClockTaskContext {
     QueueHandle_t clockQueue;
-    Display* display;
+    IDisplay* display;
 };
 
 static void UserInterfaceTask(void *param) {
     UiTaskContext* uiCtx = static_cast<UiTaskContext*>(param);
     QueueHandle_t q = uiCtx->encoderQueue;
-    Display* lcd = uiCtx->display;
+    IDisplay* lcd = uiCtx->display;
 
     EncoderEvent evt;
     bool flag = false;
@@ -57,7 +58,7 @@ static void UserInterfaceTask(void *param) {
 void ClockDisplayTask(void* param) {
     ClockTaskContext* uiCtx = static_cast<ClockTaskContext*>(param);
     QueueHandle_t q = uiCtx->clockQueue;
-    Display* lcd = uiCtx->display;
+    IDisplay* lcd = uiCtx->display;
 
     char line1[32];
     char line2[32];
