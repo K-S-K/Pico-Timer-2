@@ -37,6 +37,7 @@ add_executable(${NAME}
         ./Display/Display.cpp
         ./Drivers/HD44780.cpp
         ./Drivers/RotaryEncoder.cpp
+        ./Menu/MenuController.cpp
         )
 
 # Pull in our pico_stdlib which pulls in commonly used features
