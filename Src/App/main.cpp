@@ -7,8 +7,8 @@
 #include "../Drivers/HD44780.hpp"
 #include "../Display/Display.hpp"
 #include "../Display/IDisplay.hpp"
-#include "../Menu/MenuController.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
+#include "../UserInterface/Menu/MenuController.hpp"
 
 
 struct UiTaskContext {

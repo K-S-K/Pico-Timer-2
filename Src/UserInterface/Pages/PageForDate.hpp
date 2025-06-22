@@ -2,61 +2,13 @@
 
 #include "../Display/IDisplay.hpp"
 
-#include "MenuEvent.h"
-
-enum class MenuStopType {
-    Cancel,
-    Data,
-    Apply,
-};
+#include "../Menu/MenuEvent.h"
+#include "InputElement.hpp"
 
 enum class EventProcessingResult {
     Continue,
     Cancel,
     Apply,
-};
-
-
-class StopItem
-{
-    public:
-    StopItem(IDisplay* display, int row, int col, MenuStopType type)
-    : display(display), row(row), col(col), type(type) {}
-
-    void Render(bool isActive)
-    {
-        const char* label = isActive? 
-            (type == MenuStopType::Cancel) ? "Cancel" :
-            (type == MenuStopType::Apply) ? "Apply" :
-            (type == MenuStopType::Data) ? "^" : "?" :  // 251
-            (type == MenuStopType::Cancel) ? "      " :
-            (type == MenuStopType::Apply) ? "     " :
-            (type == MenuStopType::Data) ? " " : "?" ;  // 251
-
-        display->ShowText(3, 0, hintClear); // Clear previous text
-
-        const char* hint = isActive ? 
-            (type == MenuStopType::Cancel) ? "Cancel" :
-            (type == MenuStopType::Apply) ? "Apply" :
-            (type == MenuStopType::Data) ? "Select" : "Modify" : "";
-
-        if(type == MenuStopType::Data) {
-            display->ShowText(row, col, label);
-        }
-
-        display->ShowText(3, 0, hint);
-    }
-
-    MenuStopType type;
-
-    private:
-    int row;
-    int col;
-    IDisplay* display;
-
-    const char* hintSelect = "Select";
-    const char* hintModify = "Modify";
-    const char* hintClear =  "      ";
 };
 
 
@@ -69,18 +21,18 @@ class PageForDate
         value.CopyFrom(valueIn);
 
         int i = 0;
-        stopItems[i++] = new StopItem(display, 3, 0, MenuStopType::Cancel);
-        stopItems[i++] = new StopItem(display, 3, 0, MenuStopType::Apply);
-        stopItems[i++] = new StopItem(display, row + 1, col + 5, MenuStopType::Data);
-        stopItems[i++] = new StopItem(display, row + 1, col + 8, MenuStopType::Data);
-        stopItems[i++] = new StopItem(display, row + 1, col + 11, MenuStopType::Data);
+        stopItems[i++] = new InputElement(display, 3, 0, InputElementType::Cancel);
+        stopItems[i++] = new InputElement(display, 3, 0, InputElementType::Apply);
+        stopItems[i++] = new InputElement(display, row + 1, col + 5, InputElementType::Data);
+        stopItems[i++] = new InputElement(display, row + 1, col + 8, InputElementType::Data);
+        stopItems[i++] = new InputElement(display, row + 1, col + 11, InputElementType::Data);
 
         MaxStopItemIndex = 4;
     }
 
     EventProcessingResult ProcessMenuEvent(MenuEvent event)
     {
-        stopItems[CurrentStopItemIndex]->Render(false); // Deactivate current item
+        stopItems[CurrentStopItemIndex]->Render(InputElementMode ::Bypass); // Deactivate current item
         switch (event) {
             case MenuEvent::MoveFwd:
                 if(CurrentStopItemIndex >= MaxStopItemIndex) {
@@ -102,7 +54,8 @@ class PageForDate
                 // Handle button press if needed
                 break;
         }
-        stopItems[CurrentStopItemIndex]->Render(true); // Activate the current item
+        stopItems[CurrentStopItemIndex]->Render(InputElementMode ::Select); // Activate the current item
+        // TODO: Also render with InputElementMode   ::Modify if needed
         // switch (event) {
         //     case MenuEvent::MoveFwd:
         //         value.incrementDay();
@@ -133,9 +86,7 @@ class PageForDate
     int col;
 
     DateTime value;
-    StopItem *stopItems[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
+    InputElement *stopItems[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
     int CurrentStopItemIndex = 0;
     int MaxStopItemIndex = 0;
 };
-
-
