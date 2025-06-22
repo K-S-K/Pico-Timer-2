@@ -136,7 +136,7 @@ int main() {
   clock.SetAlarmTime({0, 0, 0, 12, 0, 0});  // Alarm at 12:00
   clock.SetAlarmDuty(true);
 
-  static MenuController menu(&display);
+  static MenuController menu(&clock, &display);
 
   static UiTaskContext uiCtx = {
     .encoderQueue = encoder.GetEventQueue(),

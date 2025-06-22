@@ -39,20 +39,7 @@ void Clock::TaskLoop(void* param) {
 
 void Clock::Tick() {
     // === Time Incrementation ===
-    currentTime.second++;
-    if (currentTime.second >= 60) {
-        currentTime.second = 0;
-        currentTime.minute++;
-        if (currentTime.minute >= 60) {
-            currentTime.minute = 0;
-            currentTime.hour++;
-            if (currentTime.hour >= 24) {
-                currentTime.hour = 0;
-                // Advance day
-                incrementDay();
-            }
-        }
-    }
+    currentTime.incrementSec();
 
     // === Alarm Check ===
     if (alarmActive) {
@@ -76,31 +63,6 @@ void Clock::Tick() {
     xQueueSend(outQueue, &evt, 0);
 }
 
-bool Clock::isLeapYear(int year) {
-    return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
-}
-
-int Clock::daysInMonth(int month, int year) {
-    switch (month) {
-        case 2: return isLeapYear(year) ? 29 : 28;
-        case 4: case 6: case 9: case 11: return 30;
-        default: return 31;
-    }
-}
-
-void Clock::incrementDay() {
-    currentTime.day++;
-    int maxDay = daysInMonth(currentTime.month, currentTime.year);
-    if (currentTime.day > maxDay) {
-        currentTime.day = 1;
-        currentTime.month++;
-        if (currentTime.month > 12) {
-            currentTime.month = 1;
-            currentTime.year++;
-        }
-    }
-}
-
 void Clock::Pause() { running = false; }
 void Clock::Resume() { running = true; }
 
@@ -108,7 +70,7 @@ void Clock::SetCurrentTime(const DateTime& newTime) { currentTime = newTime; }
 void Clock::SetAlarmTime(const DateTime& newTime) { alarmTime = newTime; }
 void Clock::SetAlarmDuty(bool isActive) { alarmActive = isActive; }
 
-void Clock::GetCurrentTime(DateTime& outTime) { outTime = currentTime; }
-void Clock::GetAlarmTime(DateTime& outTime) { outTime = alarmTime; }
+void Clock::GetCurrentTime(DateTime& outTime) { outTime.CopyFrom(currentTime); }
+void Clock::GetAlarmTime(DateTime& outTime) { outTime.CopyFrom(alarmTime); }
 
 QueueHandle_t Clock::GetEventQueue() const { return outQueue; }

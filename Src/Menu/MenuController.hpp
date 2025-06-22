@@ -3,8 +3,12 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 
+#include "../Clock/Clock.hpp"
 #include "../Display/IDisplay.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
+
+#include "MenuEvent.h"
+#include "PageForDate.hpp"
 
 enum class MenuState {
     MainScreen,
@@ -13,6 +17,7 @@ enum class MenuState {
 };
 
 enum class MenuItem {
+    Date,
     Time,
     Alarm,
     Relay,
@@ -21,31 +26,24 @@ enum class MenuItem {
     Count
 };
 
-enum class MenuEvent {
-    MoveFwd,
-    MoveBack,
-    PushButton,
-};
-
-struct MenuCommand {
-    MenuEvent event;
-};
 
 class MenuController {
 public:
-    MenuController(IDisplay* display);
+    MenuController(Clock* clock, IDisplay* display);
     void ProcessEvent(MenuEvent event);
 
 private:
     void DebugEventInput(MenuEvent event, int row, int col);
-    void ProcessMenu(MenuEvent event);
+    void ProcessMenuEvent(MenuEvent event);
     void Render();
 
-    MenuState state = MenuState::MainScreen;
-    MenuItem currentItem = MenuItem::Time;
+    MenuState menuState = MenuState::MainScreen;
+    MenuItem currentItem = MenuItem::Exit;
     int currentEditValue = 0;
 
-    IDisplay* display;
+    Clock* clock = nullptr;
+    IDisplay* display = nullptr;
+    PageForDate *pageForDate = nullptr;
 
     bool flag = false;
     int counter = 0;

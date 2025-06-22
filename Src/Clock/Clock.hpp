@@ -52,10 +52,6 @@ private:
     static void TaskLoop(void* param);
     void Tick();  // the per-second logic
 
-    bool isLeapYear(int year);
-    void incrementDay();
-    int daysInMonth(int month, int year);
-
     DateTime currentTime;
     DateTime alarmTime;
     bool alarmRinging = false; // true if the alarm is currently ringing
