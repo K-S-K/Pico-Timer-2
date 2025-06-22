@@ -6,6 +6,8 @@
     * clock events, and alarm functionality in a system.
 */
 
+#include "pico/stdlib.h"
+
 struct DateTime {
   uint16_t year;
   uint8_t month;

@@ -4,22 +4,18 @@
 
 #include "../Menu/MenuEvent.h"
 #include "InputElement.hpp"
-
-enum class EventProcessingResult {
-    Continue,
-    Cancel,
-    Apply,
-};
+#include "EmptyPage.hpp"
 
 
-class PageForDate
+class PageForDate : public EmptyPage
 {
     public:
     PageForDate(IDisplay* display, int row, int col, DateTime valueIn)
-    : display(display), row(row), col(col)
+    : EmptyPage(display, row, col)
     {
         currentValue.CopyFrom(valueIn);
 
+        elements = new InputElement*[5]; // 3 editable fields + Cancel/Apply
         int i = 0;
         elements[i++] = new InputElement(display, 3, 0, InputElementType::Cancel);
         elements[i++] = new InputElement(display, row + 1, col + 5, InputElementType::Data, &PageForDate::AlterYearThunk, this);
@@ -29,59 +25,8 @@ class PageForDate
 
         MaxStopItemIndex = i - 1;
     }
-
-    EventProcessingResult ProcessMenuEvent(MenuEvent event)
-    {
-        if(isEditing)
-        {
-            elements[CurrentElementIndex]->ProcessUserInput(event);
-        }
-        else
-        {
-            elements[CurrentElementIndex]->Render(InputElementMode::Bypass); // Deactivate current item
-            switch (event) {
-                case MenuEvent::MoveFwd:
-                    if(CurrentElementIndex >= MaxStopItemIndex) {
-                        CurrentElementIndex = MaxStopItemIndex;
-                        return EventProcessingResult::Continue;
-                    }
-                    
-                    CurrentElementIndex++;
-                    break;
-
-                case MenuEvent::MoveBack:
-                    if(CurrentElementIndex <= 0) {
-                        CurrentElementIndex = 0;
-                        return EventProcessingResult::Continue;
-                    }
-                    
-                    CurrentElementIndex--;
-                    break;
-
-                case MenuEvent::PushButton:
-                    if(elements[CurrentElementIndex]->type == InputElementType::Cancel)
-                    {
-                        // If Cancel is pressed, exit editing mode without saving
-                        return EventProcessingResult::Cancel;
-                    }
-                    else if(elements[CurrentElementIndex]->type == InputElementType::Apply)
-                    {
-                        // If Apply is pressed, save the current currentValue and exit editing mode
-                        return EventProcessingResult::Apply;
-                    }
-                    else
-                    {
-                        // Switch to editing mode
-                        isEditing = true;
-                    }
-                    break;
-            }
-        }
-        
-        Render();
-
-        return EventProcessingResult::Continue;
-    }
+    
+    virtual ~PageForDate() {}
 
     void Render()
     {
@@ -89,11 +34,8 @@ class PageForDate
         snprintf(buffer, sizeof(buffer), ": %04d.%02d.%02d", currentValue.year, currentValue.month, currentValue.day);
         display->ShowText(row, col, buffer);
 
-        // Render the current item in the appropriate mode
-        elements[CurrentElementIndex]->Render(isEditing ? 
-            InputElementMode::Modify :
-            InputElementMode::Select
-        );
+        // Render the cursor and options
+        RenderElements();
     }
 
     void GetCurrentTime(DateTime& outTime)
@@ -115,10 +57,6 @@ class PageForDate
 
     
     private:
-    IDisplay* display;
-    int row;
-    int col;
-
     void AlterDay(MenuEvent event)
     {
         switch (event) {
@@ -168,8 +106,4 @@ class PageForDate
     }
 
     DateTime currentValue;
-    InputElement *elements[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
-    int CurrentElementIndex = 0;
-    int MaxStopItemIndex = 0;
-    bool isEditing = false; // Flag to indicate if we are in editing mode
 };

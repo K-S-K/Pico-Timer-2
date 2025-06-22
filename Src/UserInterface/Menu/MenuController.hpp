@@ -44,7 +44,7 @@ private:
 
     Clock* clock = nullptr;
     IDisplay* display = nullptr;
-    PageForDate *pageForDate = nullptr;
+    IPage *pageForDate = nullptr;
 
     bool flag = false;
     int counter = 0;

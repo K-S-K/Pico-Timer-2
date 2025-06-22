@@ -104,11 +104,10 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                 }
                 if(result == EventProcessingResult::Apply)
                 {
-
                         DateTime clockValue;
                         clock->GetCurrentTime(clockValue);
                         DateTime editorValue;
-                        pageForDate->GetCurrentTime(editorValue);
+                        ((PageForDate*)(pageForDate))->GetCurrentTime(editorValue);
                         clockValue.CopyDateFrom(editorValue);
 
                         // Apply the changes to the clock
@@ -117,6 +116,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                 delete pageForDate;
                 pageForDate = nullptr;
                 menuState = MenuState::MenuScreen;
+                display->Clear();
             }
             else if (event == MenuEvent::MoveFwd) {
                 currentEditValue++;
