@@ -16,8 +16,11 @@ enum class InputElementMode
 class InputElement
 {
     public:
-    InputElement(IDisplay* display, int row, int col, InputElementType type)
-    : display(display), row(row), col(col), type(type) {}
+    using PfnProcessUserInputType = void (*)(void* pPage, MenuEvent event);
+    InputElement(IDisplay* display, int row, int col, InputElementType type, 
+                 PfnProcessUserInputType pfnProcessUserInput = nullptr, void* pPage = nullptr)
+    : display(display), row(row), col(col), type(type), 
+        pfnProcessUserInput(pfnProcessUserInput), pPage(pPage) {}
 
     void Render(InputElementMode  mode)
     {
@@ -47,10 +50,20 @@ class InputElement
 
     InputElementType type;
 
+
+    void ProcessUserInput(MenuEvent event) {
+        if (pfnProcessUserInput) {
+            pfnProcessUserInput(pPage, event);
+        }
+    }
+
     private:
     int row;
     int col;
     IDisplay* display;
+    PfnProcessUserInputType pfnProcessUserInput;
+    void* pPage;
+
 
     const char* hintSelect = "Select";
     const char* hintModify = "Modify";
