@@ -23,6 +23,18 @@ struct DateTime {
     second = other.second;
   }
 
+  void CopyDateFrom(const DateTime& other) {
+    year = other.year;
+    month = other.month;
+    day = other.day;
+  }
+
+  void CopyTimeFrom(const DateTime& other) {
+    hour = other.hour;
+    minute = other.minute;
+    second = other.second;
+  }
+
   void incrementSec() {
     second++;
     if (second >= 60) {

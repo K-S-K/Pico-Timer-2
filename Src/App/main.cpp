@@ -19,6 +19,7 @@ struct UiTaskContext {
 
 struct ClockTaskContext {
     QueueHandle_t clockQueue;
+    MenuController* menu;
     IDisplay* display;
 };
 
@@ -58,6 +59,7 @@ static void UserInterfaceTask(void *param) {
 void ClockDisplayTask(void* param) {
     ClockTaskContext* uiCtx = static_cast<ClockTaskContext*>(param);
     QueueHandle_t q = uiCtx->clockQueue;
+    MenuController* menu = uiCtx->menu;
     IDisplay* lcd = uiCtx->display;
 
     char line0[32];
@@ -68,6 +70,15 @@ void ClockDisplayTask(void* param) {
     while (true) {
         ClockEvent userEvent;
         if (xQueueReceive(q, &userEvent, portMAX_DELAY)) {
+
+            // Check if we are in the main screen of the menu
+            if(menu->GetMenuState() != MenuState::MainScreen) {
+                // If we are not in the main screen, ignore clock events
+                // This allows the menu to take precedence over clock updates
+                continue;
+            }
+
+            // Process the clock event
             switch (userEvent.type) {
                 case ClockEventType::Tick:
                     snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
@@ -76,9 +87,10 @@ void ClockDisplayTask(void* param) {
                              userEvent.currentTime.hour, userEvent.currentTime.minute, userEvent.currentTime.second);
                     snprintf(line2, sizeof(line2), "Alarm Bell is %3s", alarmIsOn ? "ON" : "OFF");
 
-                    // lcd->ShowText(3, 0, line0);
-                    lcd->ShowText(3, 11, line1);
-                    // lcd->ShowText(3, 0, line2);
+                    lcd->ShowText(0, 0, "Raspberry Pico Timer");
+                    lcd->ShowText(1, 0, line0);
+                    lcd->ShowText(1, 11, line1);
+                    lcd->ShowText(3, 0, line2);
                     break;
 
                 case ClockEventType::AlarmOn:
@@ -146,6 +158,7 @@ int main() {
 
   static ClockTaskContext clockCtx = {
     .clockQueue = clock.GetEventQueue(),
+    .menu = &menu,
     .display = &display
   };
 

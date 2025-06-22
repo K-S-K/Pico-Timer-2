@@ -47,9 +47,23 @@ void MenuController::DebugEventInput(MenuEvent event, int row, int col)
 void MenuController::ProcessMenuEvent(MenuEvent event) {
     switch (menuState) {
         case MenuState::MainScreen:
+            // In the main screen, we only handle the push button event to enter the menu
             if (event == MenuEvent::PushButton) {
+                // Clear the display before entering the menu
+                display->Clear();
+
+                // Switch to the menu mode
                 menuState = MenuState::MenuScreen;
+
+                // Set the initial item to the "Cancel" item
+                // so if user entered the menu by mistake, he can exit it
+                // by pressing the button again
                 currentItem = MenuItem::Exit;
+            }
+            // Otherwise, we ignore the event in the main screen
+            else
+            {
+                return;
             }
             break;
 
@@ -60,7 +74,12 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                 currentItem = static_cast<MenuItem>((static_cast<int>(currentItem) + static_cast<int>(MenuItem::Count) - 1) % static_cast<int>(MenuItem::Count));
             } else if (event == MenuEvent::PushButton) {
                 if (currentItem == MenuItem::Exit) {
+                    // If the user pressed the Exit button, we return to the main screen
                     menuState = MenuState::MainScreen;
+
+                    // Clear the display to avoid showing the 
+                    // rest elements of the menu after exiting it
+                    display->Clear();
                 } else {
                     menuState = MenuState::EditScreen;
                     if(currentItem == MenuItem::Date){
@@ -75,14 +94,25 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
             break;
 
         case MenuState::EditScreen:
-            if(pageForDate != nullptr){
+            if(currentItem == MenuItem::Date && pageForDate != nullptr)
+            {
                 EventProcessingResult result = 
                     pageForDate->ProcessMenuEvent(event);
-                if(result == EventProcessingResult::Continue){
+                if(result == EventProcessingResult::Continue)
+                {
                     return; // Continue processing in the page
                 }
-                if(result == EventProcessingResult::Cancel){
-                    // TODO: Save the edited data result
+                if(result == EventProcessingResult::Apply)
+                {
+
+                        DateTime clockValue;
+                        clock->GetCurrentTime(clockValue);
+                        DateTime editorValue;
+                        pageForDate->GetCurrentTime(editorValue);
+                        clockValue.CopyDateFrom(editorValue);
+
+                        // Apply the changes to the clock
+                        clock->SetCurrentTime(clockValue);
                 }
                 delete pageForDate;
                 pageForDate = nullptr;
@@ -101,6 +131,13 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
 }
 
 void MenuController::Render() {
+    // If we are in the main screen, we do not render anything
+    // This is to avoid flickering and unnecessary updates
+    if(menuState == MenuState::MainScreen)
+    {
+        return;
+    }
+
     char buf[21];
     
     // Fill with spaces
@@ -112,7 +149,8 @@ void MenuController::Render() {
 
     switch (menuState) {
         case MenuState::MainScreen: {
-            display->ShowText(0, 0, "Main Screen");
+            // Display the main screen status for the debugging purpose only
+            // display->ShowText(0, 0, "Main Screen");
             break;
         }
 

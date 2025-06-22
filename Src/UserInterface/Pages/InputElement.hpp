@@ -22,25 +22,24 @@ class InputElement
     : display(display), row(row), col(col), type(type), 
         pfnProcessUserInput(pfnProcessUserInput), pPage(pPage) {}
 
-    void Render(InputElementMode  mode)
+    void Render(InputElementMode mode)
     {
-
-        display->ShowText(3, 0, hintClear); // Clear previous text
+        display->ShowText(3, 0, hintClear); // Clear previous hint text
 
         const char* hint = 
             (type == InputElementType::Cancel) ? "Cancel" :
             (type == InputElementType::Apply) ? "Apply" :
             (type == InputElementType::Data) ? 
             
-            (mode == InputElementMode    ::Bypass) ? hintClear :
-            (mode == InputElementMode    ::Select) ? hintSelect :
-            (mode == InputElementMode    ::Modify) ? hintModify : "" : "";
+            (mode == InputElementMode::Bypass) ? hintClear :
+            (mode == InputElementMode::Select) ? hintSelect :
+            (mode == InputElementMode::Modify) ? hintModify : "" : "";
 
         if(type == InputElementType::Data) {
             const char* label = 
-                (mode == InputElementMode    ::Bypass) ? " " :
-                (mode == InputElementMode    ::Select) ? "^" :
-                (mode == InputElementMode    ::Modify) ? ">" : "?" ;
+                (mode == InputElementMode::Bypass) ? " " :
+                (mode == InputElementMode::Select) ? "^" :
+                (mode == InputElementMode::Modify) ? ">" : "?" ;
 
             display->ShowText(row, col, label);
         }

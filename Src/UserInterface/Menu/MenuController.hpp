@@ -31,6 +31,7 @@ class MenuController {
 public:
     MenuController(Clock* clock, IDisplay* display);
     void ProcessEvent(MenuEvent event);
+    MenuState GetMenuState() const { return menuState; }
 
 private:
     void DebugEventInput(MenuEvent event, int row, int col);
