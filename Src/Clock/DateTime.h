@@ -37,27 +37,54 @@ struct DateTime {
     second = other.second;
   }
 
-  void incrementSec() {
+  void incrementSec(bool propagate = true)
+  {
     second++;
-    if (second >= 60) {
+
+    if (second >= 60)
+    {
         second = 0;
-        incrementMinute();
+
+        // If propagate is true, 
+        // we increment the minute
+        if (propagate)
+        {
+          incrementMinute(propagate);
+        }
     }
   }
 
-  void incrementMinute() {
+  void incrementMinute(bool propagate = true)
+  {
     minute++;
-    if (minute >= 60) {
+
+    if (minute >= 60)
+    {
         minute = 0;
-        incrementHour();
+
+        // If propagate is true, 
+        // we increment the hour
+        if (propagate)
+        {
+          incrementHour(propagate);
+        }
     }
   }
 
-  void incrementHour() {
+  void incrementHour(bool propagate = true)
+  {
     hour++;
-    if (hour >= 24) {
+    
+    if (hour >= 24)
+    {
         hour = 0;
-        incrementDay();
+
+        // If propagate is true, 
+        // we increment the day
+        if (propagate)
+        {
+          incrementDay();
+        }
     }
   }
 
@@ -83,30 +110,60 @@ struct DateTime {
     day = DateTime::daysInMonth(month, year);
   }
   
-  void DecrementSec() {
-    if (second > 0) {
+  void DecrementSec(bool propagate = true)
+  {
+    if (second > 0)
+    {
         second--;
-    } else {
+    }
+    else
+    {
         second = 59;
-        DecrementMinute();
+
+        // If propagate is true,
+        // we decrement the minute
+        if (propagate)
+        {
+          DecrementMinute(propagate);
+        }
     }
   }
 
-  void DecrementMinute() {
-    if (minute > 0) {
+  void DecrementMinute(bool propagate = true)
+  {
+    if (minute > 0)
+    {
         minute--;
-    } else {
+    }
+    else
+    {
         minute = 59;
-        DecrementHour();
+
+        // If propagate is true,
+        // we decrement the hour
+        if (propagate)
+        {
+          DecrementHour(propagate);
+        }
     }
   }
 
-  void DecrementHour() {
-    if (hour > 0) {
+  void DecrementHour(bool propagate = true)
+  {
+    if (hour > 0)
+    {
         hour--;
-    } else {
+    }
+    else
+    {
         hour = 23;
-        DecrementDay();
+
+        // If propagate is true,
+        // we decrement the day
+        if (propagate)
+        {
+          DecrementDay();
+        }
     }
   }
 
