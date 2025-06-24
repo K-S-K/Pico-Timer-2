@@ -49,10 +49,8 @@ private:
     MenuItem *currentItem = nullptr;
     int currentEditValue = 0;
 
+    int count = 0;
     Clock* clock = nullptr;
     IDisplay* display = nullptr;
-    IPage *pageForDate = nullptr;
-
-    MenuItem *menuItems;
-    int count = 0;
+    MenuItem *menuItems = nullptr;
 };
