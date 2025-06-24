@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../Pages/IPage.hpp"
+
 enum class MenuItemType {
     Date,
     Time,
