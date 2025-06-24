@@ -19,6 +19,8 @@
 #include "task.h"
 #include <stdint.h>
 
+#include "IDisplay.hpp"
+
 #include "../Drivers/HD44780.hpp"
 
 enum class DisplayCommandType {
@@ -43,14 +45,14 @@ struct DisplayCommand {
     };
 };
 
-class Display {
+class Display : public IDisplay {
 public:
     Display(HD44780* lcd);
     void Start();
 
-    void Clear();
-    void SetBacklight(bool on);
-    void ShowText(int row, int col, const char* text);
+    void Clear() override;
+    void SetBacklight(bool on) override;
+    void ShowText(int row, int col, const char* text) override;
 
 private:
     static void TaskLoop(void* param);

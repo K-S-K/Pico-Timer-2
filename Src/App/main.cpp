@@ -4,52 +4,54 @@
 #include <cstdio>
 
 #include "../Clock/Clock.hpp"
-#include "../Display/Display.hpp"
 #include "../Drivers/HD44780.hpp"
+#include "../Display/Display.hpp"
+#include "../Display/IDisplay.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
+#include "../UserInterface/Menu/MenuController.hpp"
 
 
 struct UiTaskContext {
     QueueHandle_t encoderQueue;
-    Display* display;
+    IDisplay* display;
+    MenuController* menu;
 };
 
 struct ClockTaskContext {
     QueueHandle_t clockQueue;
-    Display* display;
+    MenuController* menu;
+    IDisplay* display;
 };
 
 static void UserInterfaceTask(void *param) {
     UiTaskContext* uiCtx = static_cast<UiTaskContext*>(param);
     QueueHandle_t q = uiCtx->encoderQueue;
-    Display* lcd = uiCtx->display;
+    MenuController* menu = uiCtx->menu;
+    IDisplay* lcd = uiCtx->display;
 
-    EncoderEvent evt;
-    bool flag = false;
-    int counter = 0;
-
-    char buffer[32];
-
-    lcd->ShowText(1, 0, "Count: 0  Flag: OFF");
+    EncoderEvent userEvent;
 
     while (true) {
-        if (xQueueReceive(q, &evt, portMAX_DELAY)) {
-            switch (evt.type) {
+        if (xQueueReceive(q, &userEvent, portMAX_DELAY)) {
+
+            // Convert EncoderEvent to MenuEvent
+            MenuEvent menuEvt;
+            switch (userEvent.type) {
                 case EncoderEventType::RotatedR:
-                    counter++;
+                    menuEvt = MenuEvent::MoveFwd;
                     break;
                 case EncoderEventType::RotatedL:
-                    counter--;
+                    menuEvt = MenuEvent::MoveBack;
                     break;
                 case EncoderEventType::Pressed:
-                    flag = !flag;
+                    menuEvt = MenuEvent::PushButton;
                     break;
+                default:
+                    continue; // Ignore unknown events
             }
 
-            snprintf(buffer, sizeof(buffer), "Conut: %2d Flag: %3s", counter, flag ? "ON" : "OFF");
-            lcd->ShowText(1, 0, buffer);
-
-            printf("%s\n", buffer); // Optional debug
+            // Process the menu event
+            menu->ProcessEvent(menuEvt);
         }
     }
 }
@@ -57,26 +59,37 @@ static void UserInterfaceTask(void *param) {
 void ClockDisplayTask(void* param) {
     ClockTaskContext* uiCtx = static_cast<ClockTaskContext*>(param);
     QueueHandle_t q = uiCtx->clockQueue;
-    Display* lcd = uiCtx->display;
+    MenuController* menu = uiCtx->menu;
+    IDisplay* lcd = uiCtx->display;
 
+    char line0[32];
     char line1[32];
     char line2[32];
     bool alarmIsOn = false;
 
     while (true) {
-        ClockEvent evt;
-        if (xQueueReceive(q, &evt, portMAX_DELAY)) {
-            switch (evt.type) {
+        ClockEvent userEvent;
+        if (xQueueReceive(q, &userEvent, portMAX_DELAY)) {
+
+            // Check if we are in the main screen of the menu
+            if(menu->GetMenuState() != MenuState::MainScreen) {
+                // If we are not in the main screen, ignore clock events
+                // This allows the menu to take precedence over clock updates
+                continue;
+            }
+
+            // Process the clock event
+            switch (userEvent.type) {
                 case ClockEventType::Tick:
-                    snprintf(line1, sizeof(line1), "%04d-%02d-%02d %02d:%02d:%02d",
-                             evt.currentTime.year, evt.currentTime.month, evt.currentTime.day,
-                             evt.currentTime.hour, evt.currentTime.minute, evt.currentTime.second);
+                    snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
+                             userEvent.currentTime.year, userEvent.currentTime.month, userEvent.currentTime.day);
+                    snprintf(line1, sizeof(line1), "%02d:%02d:%02d",
+                             userEvent.currentTime.hour, userEvent.currentTime.minute, userEvent.currentTime.second);
+                    snprintf(line2, sizeof(line2), "Alarm Bell is %3s", alarmIsOn ? "ON" : "OFF");
 
-                    snprintf(line2, sizeof(line2), 
-                            "Alarm Bell is %3s",
-                             alarmIsOn ? "ON" : "OFF");
-
-                    lcd->ShowText(2, 0, line1);
+                    lcd->ShowText(0, 0, "Raspberry Pico Timer");
+                    lcd->ShowText(1, 0, line0);
+                    lcd->ShowText(1, 11, line1);
                     lcd->ShowText(3, 0, line2);
                     break;
 
@@ -122,7 +135,7 @@ int main() {
   Display display(&lcd);
   display.Start();
 
-  display.ShowText(0, 0, "Hello, Pico Timer!");
+  // display.ShowText(0, 0, "Hello, Pico Timer!");
 
   static RotaryEncoder encoder(14, 15, 13);
   encoder.Init();
@@ -135,14 +148,17 @@ int main() {
   clock.SetAlarmTime({0, 0, 0, 12, 0, 0});  // Alarm at 12:00
   clock.SetAlarmDuty(true);
 
+  static MenuController menu(&clock, &display);
 
   static UiTaskContext uiCtx = {
     .encoderQueue = encoder.GetEventQueue(),
-    .display = &display
+    .display = &display,
+    .menu = &menu
   };
 
   static ClockTaskContext clockCtx = {
     .clockQueue = clock.GetEventQueue(),
+    .menu = &menu,
     .display = &display
   };
 

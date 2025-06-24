@@ -12,7 +12,6 @@
 
 #pragma once
 
-#include "pico/stdlib.h"
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
@@ -51,10 +50,6 @@ public:
 private:
     static void TaskLoop(void* param);
     void Tick();  // the per-second logic
-
-    bool isLeapYear(int year);
-    void incrementDay();
-    int daysInMonth(int month, int year);
 
     DateTime currentTime;
     DateTime alarmTime;
