@@ -37,115 +37,204 @@ struct DateTime {
     second = other.second;
   }
 
-  void incrementSec() {
+  void IncrementSeconds(bool propagate = true)
+  {
     second++;
-    if (second >= 60) {
+
+    if (second >= 60)
+    {
         second = 0;
-        incrementMinute();
+
+        // If propagate is true, 
+        // we increment the minute
+        if (propagate)
+        {
+          IncrementMinutes(propagate);
+        }
     }
   }
 
-  void incrementMinute() {
+  void IncrementMinutes(bool propagate = true)
+  {
     minute++;
-    if (minute >= 60) {
+
+    if (minute >= 60)
+    {
         minute = 0;
-        incrementHour();
+
+        // If propagate is true, 
+        // we increment the hour
+        if (propagate)
+        {
+          IncrementHours(propagate);
+        }
     }
   }
 
-  void incrementHour() {
+  void IncrementHours(bool propagate = true)
+  {
     hour++;
-    if (hour >= 24) {
+    
+    if (hour >= 24)
+    {
         hour = 0;
-        incrementDay();
+
+        // If propagate is true, 
+        // we increment the day
+        if (propagate)
+        {
+          IncrementDays();
+        }
     }
   }
 
-  void incrementDay() {
+  void IncrementDays()
+  {
     day++;
-    int maxDay = DateTime::daysInMonth(month, year);
-    if (day > maxDay) {
+
+    int maxDay = DateTime::DaysInMonth(month, year);
+    if (day > maxDay)
+    {
         day = 1;
-        incrementMonth();
+        IncrementMonths();
     }
   }
 
-  void incrementMonth() {
+  void IncrementMonths()
+  {
     month++;
-    if (month > 12) {
+
+    if (month > 12)
+    {
         month = 1;
-        incrementYear();
+        IncrementYears();
     }
   }
 
-  void incrementYear() {
+  void IncrementYears()
+  {
     year++;
-    day = DateTime::daysInMonth(month, year);
+    day = DateTime::DaysInMonth(month, year);
   }
   
-  void DecrementSec() {
-    if (second > 0) {
+  void DecrementSeconds(bool propagate = true)
+  {
+    if (second > 0)
+    {
         second--;
-    } else {
+    }
+    else
+    {
         second = 59;
-        DecrementMinute();
+
+        // If propagate is true,
+        // we decrement the minute
+        if (propagate)
+        {
+          DecrementMinutes(propagate);
+        }
     }
   }
 
-  void DecrementMinute() {
-    if (minute > 0) {
+  void DecrementMinutes(bool propagate = true)
+  {
+    if (minute > 0)
+    {
         minute--;
-    } else {
+    }
+    else
+    {
         minute = 59;
-        DecrementHour();
+
+        // If propagate is true,
+        // we decrement the hour
+        if (propagate)
+        {
+          DecrementHours(propagate);
+        }
     }
   }
 
-  void DecrementHour() {
-    if (hour > 0) {
+  void DecrementHours(bool propagate = true)
+  {
+    if (hour > 0)
+    {
         hour--;
-    } else {
+    }
+    else
+    {
         hour = 23;
-        DecrementDay();
+
+        // If propagate is true,
+        // we decrement the day
+        if (propagate)
+        {
+          DecrementDays();
+        }
     }
   }
 
-  void DecrementDay() {
-    if (day > 1) {
+  void DecrementDays()
+  {
+    if (day > 1)
+    {
         day--;
-    } else {
-        DecrementMonth();
+    }
+    else
+    {
+        DecrementMonths();
     }
   }
 
-  void DecrementMonth() {
-    if (month > 1) {
+  void DecrementMonths()
+  {
+    if (month > 1)
+    {
         month--;
-    } else {
+    }
+    else
+    {
         month = 12;
         year--;
     }
-    day = DateTime::daysInMonth(month, year);
+
+    day = DateTime::DaysInMonth(month, year);
   }
 
-  void DecrementYear() {
-    if (year > 0) {
+  void DecrementYears()
+  {
+    if (year > 0)
+    {
         year--;
-    } else {
+    }
+    else
+    {
         year = 0; // Prevent underflow
     }
-    day = DateTime::daysInMonth(month, year);
+    
+    day = DateTime::DaysInMonth(month, year);
   }
 
-  static int daysInMonth(int month, int year) {
+  private:
+
+  // Helper function to get the number of days in a month
+  // considering leap years for February
+  // Returns the number of days in the specified month of the specified year
+  // month: 1-12 (January to December)
+  // year: any valid year (e.g., 2023)
+  // Returns: number of days in the month
+  static int DaysInMonth(int month, int year) {
     switch (month) {
-      case 2: return isLeapYear(year) ? 29 : 28;
+      case 2: return IsLeapYear(year) ? 29 : 28;
       case 4: case 6: case 9: case 11: return 30;
       default: return 31;
     }
   }
 
-  static bool isLeapYear(int year) {
+  // Helper function to check if a year is a leap year
+  // A year is a leap year if it is divisible by 4,
+  // except for end-of-century years, which must be divisible by 400.
+  static bool IsLeapYear(int year) {
     return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
   }
 };

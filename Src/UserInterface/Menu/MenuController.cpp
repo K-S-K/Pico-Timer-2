@@ -5,6 +5,9 @@
 #include "../Display/Display.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 
+#include "../Pages/IPage.hpp"
+#include "../Pages/PageForDate.hpp"
+#include "../Pages/PageForTime.hpp"
 
 MenuController::MenuController(Clock* clock, IDisplay* display)
     : clock(clock), display(display) 
@@ -78,50 +81,104 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                 }
                 else
                 {
-                    menuState = MenuState::EditScreen;
                     if(currentItem->IsTypeOf(MenuItemType::Date)){
-                        DateTime value;
-                        clock->GetCurrentTime(value);
-                        pageForDate = new PageForDate(display, 1, 6, value);
-                        pageForDate->Render();
+                        IPage *page = currentItem->GetPage();
+                        if(page == nullptr)
+                        {
+                            DateTime value;
+                            clock->GetCurrentTime(value);
+                            page = new PageForDate(display, 1, 6, value);
+                            currentItem->SetPage(page);
+                        }
+                        page->Render();
                     }
-                    currentEditValue = 0;
+
+                    else if(currentItem->IsTypeOf(MenuItemType::Time)){
+                        IPage *page = currentItem->GetPage();
+                        if(page == nullptr)
+                        {
+                            DateTime value;
+                            clock->GetCurrentTime(value);
+                            page = new PageForTime(display, 1, 6, value);
+                            currentItem->SetPage(page);
+                        }
+                        page->Render();
+                    }
+
+                    menuState = MenuState::EditScreen;
                 }
             }
             break;
 
         case MenuState::EditScreen:
-            if(currentItem->IsTypeOf(MenuItemType::Date) && pageForDate != nullptr)
             {
-                EventProcessingResult result = 
-                    pageForDate->ProcessMenuEvent(event);
-                if(result == EventProcessingResult::Continue)
+                IPage *page = currentItem->GetPage();
+                if(page != nullptr)
                 {
-                    return; // Continue processing in the page
-                }
-                if(result == EventProcessingResult::Apply)
-                {
-                        DateTime clockValue;
-                        clock->GetCurrentTime(clockValue);
-                        DateTime editorValue;
-                        ((PageForDate*)(pageForDate))->GetCurrentTime(editorValue);
-                        clockValue.CopyDateFrom(editorValue);
+                    if(currentItem->IsTypeOf(MenuItemType::Date))
+                    {
+                        if(page != nullptr)
+                        {
+                            EventProcessingResult result = 
+                                page->ProcessMenuEvent(event);
+                            if(result == EventProcessingResult::Continue)
+                            {
+                                return; // Continue processing in the page
+                            }
+                            if(result == EventProcessingResult::Apply)
+                            {
+                                    DateTime clockValue;
+                                    clock->GetCurrentTime(clockValue);
+                                    DateTime editorValue;
+                                    ((PageForDate*)(page))->GetCurrentTime(editorValue);
+                                    clockValue.CopyDateFrom(editorValue);
 
-                        // Apply the changes to the clock
-                        clock->SetCurrentTime(clockValue);
+                                    // Apply the changes to the clock
+                                    clock->SetCurrentTime(clockValue);
+                            }
+                            delete page;
+                            page = nullptr;
+                            currentItem->SetPage(nullptr);
+                            menuState = MenuState::MenuScreen;
+                            display->Clear();
+                        }
+                    }
+                    else if(currentItem->IsTypeOf(MenuItemType::Time))
+                    {
+                        if(page != nullptr)
+                        {
+                            EventProcessingResult result = 
+                                page->ProcessMenuEvent(event);
+                            if(result == EventProcessingResult::Continue)
+                            {
+                                return; // Continue processing in the page
+                            }
+                            if(result == EventProcessingResult::Apply)
+                            {
+                                    DateTime clockValue;
+                                    clock->GetCurrentTime(clockValue);
+                                    DateTime editorValue;
+                                    ((PageForTime*)(page))->GetCurrentTime(editorValue);
+                                    clockValue.CopyTimeFrom(editorValue);
+
+                                    // Apply the changes to the clock
+                                    clock->SetCurrentTime(clockValue);
+                            }
+                            delete page;
+                            page = nullptr;
+                            currentItem->SetPage(nullptr);
+                            menuState = MenuState::MenuScreen;
+                            display->Clear();
+                        }
+                    }
+                    // Add other page types here as needed
                 }
-                delete pageForDate;
-                pageForDate = nullptr;
-                menuState = MenuState::MenuScreen;
-                display->Clear();
-            }
-            else if (event == MenuEvent::MoveFwd) {
-                currentEditValue++;
-            } else if (event == MenuEvent::MoveBack) {
-                currentEditValue--;
-            } else if (event == MenuEvent::PushButton) {
-                menuState = MenuState::MainScreen;
-                // Saving logic will go here in the next steps
+                else if (event == MenuEvent::MoveFwd) {
+                } else if (event == MenuEvent::MoveBack) {
+                } else if (event == MenuEvent::PushButton) {
+                    menuState = MenuState::MainScreen;
+                    // Saving logic will go here in the next steps
+                }
             }
             break;
     }
@@ -161,13 +218,11 @@ void MenuController::Render() {
             display->ShowText(0, 0, "Edit:");
             display->ShowText(1, 2, currentItem->GetName());
 
-            if(pageForDate != nullptr){
-                pageForDate->Render();
-            }
-
-            else{
-                snprintf(buf, sizeof(buf), "Value: %d", currentEditValue);
-                display->ShowText(2, 2, buf);
+            {
+                IPage *page = currentItem->GetPage();
+                if(page != nullptr){
+                    page->Render();
+                }
             }
 
             break;

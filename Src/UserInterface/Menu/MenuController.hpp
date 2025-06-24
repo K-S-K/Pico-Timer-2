@@ -7,8 +7,6 @@
 #include "../Display/IDisplay.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 
-#include "../Pages/PageForDate.hpp"
-
 #include "MenuEvent.h"
 #include "MenuItem.hpp"
 
@@ -47,12 +45,9 @@ private:
 
     MenuState menuState = MenuState::MainScreen;
     MenuItem *currentItem = nullptr;
-    int currentEditValue = 0;
 
+    int count = 0;
     Clock* clock = nullptr;
     IDisplay* display = nullptr;
-    IPage *pageForDate = nullptr;
-
-    MenuItem *menuItems;
-    int count = 0;
+    MenuItem *menuItems = nullptr;
 };

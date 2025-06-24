@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../Pages/IPage.hpp"
+
 enum class MenuItemType {
     Date,
     Time,
@@ -31,11 +33,19 @@ public:
         }
 
         int GetNextItemIndex(int count) const {
-            return (static_cast<int>(type) + 1) % count;
+            return (index + 1) % count;
         }
 
         int GetPrevItemIndex(int count) const {
-            return (static_cast<int>(type) + count - 1) % count;
+            return (index + count - 1) % count;
+        }
+
+        IPage *GetPage() const {
+            return page;
+        }
+
+        void SetPage(IPage *newPage) {
+            page = newPage;
         }
 
         
@@ -43,4 +53,5 @@ public:
         MenuItemType type;
         const char* name;
         const int index;
+        IPage *page = nullptr;
 };
