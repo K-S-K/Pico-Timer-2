@@ -37,7 +37,7 @@ struct DateTime {
     second = other.second;
   }
 
-  void incrementSec(bool propagate = true)
+  void IncrementSeconds(bool propagate = true)
   {
     second++;
 
@@ -49,12 +49,12 @@ struct DateTime {
         // we increment the minute
         if (propagate)
         {
-          incrementMinute(propagate);
+          IncrementMinutes(propagate);
         }
     }
   }
 
-  void incrementMinute(bool propagate = true)
+  void IncrementMinutes(bool propagate = true)
   {
     minute++;
 
@@ -66,12 +66,12 @@ struct DateTime {
         // we increment the hour
         if (propagate)
         {
-          incrementHour(propagate);
+          IncrementHours(propagate);
         }
     }
   }
 
-  void incrementHour(bool propagate = true)
+  void IncrementHours(bool propagate = true)
   {
     hour++;
     
@@ -83,34 +83,41 @@ struct DateTime {
         // we increment the day
         if (propagate)
         {
-          incrementDay();
+          IncrementDays();
         }
     }
   }
 
-  void incrementDay() {
+  void IncrementDays()
+  {
     day++;
-    int maxDay = DateTime::daysInMonth(month, year);
-    if (day > maxDay) {
+
+    int maxDay = DateTime::DaysInMonth(month, year);
+    if (day > maxDay)
+    {
         day = 1;
-        incrementMonth();
+        IncrementMonths();
     }
   }
 
-  void incrementMonth() {
+  void IncrementMonths()
+  {
     month++;
-    if (month > 12) {
+
+    if (month > 12)
+    {
         month = 1;
-        incrementYear();
+        IncrementYears();
     }
   }
 
-  void incrementYear() {
+  void IncrementYears()
+  {
     year++;
-    day = DateTime::daysInMonth(month, year);
+    day = DateTime::DaysInMonth(month, year);
   }
   
-  void DecrementSec(bool propagate = true)
+  void DecrementSeconds(bool propagate = true)
   {
     if (second > 0)
     {
@@ -124,12 +131,12 @@ struct DateTime {
         // we decrement the minute
         if (propagate)
         {
-          DecrementMinute(propagate);
+          DecrementMinutes(propagate);
         }
     }
   }
 
-  void DecrementMinute(bool propagate = true)
+  void DecrementMinutes(bool propagate = true)
   {
     if (minute > 0)
     {
@@ -143,12 +150,12 @@ struct DateTime {
         // we decrement the hour
         if (propagate)
         {
-          DecrementHour(propagate);
+          DecrementHours(propagate);
         }
     }
   }
 
-  void DecrementHour(bool propagate = true)
+  void DecrementHours(bool propagate = true)
   {
     if (hour > 0)
     {
@@ -162,47 +169,72 @@ struct DateTime {
         // we decrement the day
         if (propagate)
         {
-          DecrementDay();
+          DecrementDays();
         }
     }
   }
 
-  void DecrementDay() {
-    if (day > 1) {
+  void DecrementDays()
+  {
+    if (day > 1)
+    {
         day--;
-    } else {
-        DecrementMonth();
+    }
+    else
+    {
+        DecrementMonths();
     }
   }
 
-  void DecrementMonth() {
-    if (month > 1) {
+  void DecrementMonths()
+  {
+    if (month > 1)
+    {
         month--;
-    } else {
+    }
+    else
+    {
         month = 12;
         year--;
     }
-    day = DateTime::daysInMonth(month, year);
+
+    day = DateTime::DaysInMonth(month, year);
   }
 
-  void DecrementYear() {
-    if (year > 0) {
+  void DecrementYears()
+  {
+    if (year > 0)
+    {
         year--;
-    } else {
+    }
+    else
+    {
         year = 0; // Prevent underflow
     }
-    day = DateTime::daysInMonth(month, year);
+    
+    day = DateTime::DaysInMonth(month, year);
   }
 
-  static int daysInMonth(int month, int year) {
+  private:
+
+  // Helper function to get the number of days in a month
+  // considering leap years for February
+  // Returns the number of days in the specified month of the specified year
+  // month: 1-12 (January to December)
+  // year: any valid year (e.g., 2023)
+  // Returns: number of days in the month
+  static int DaysInMonth(int month, int year) {
     switch (month) {
-      case 2: return isLeapYear(year) ? 29 : 28;
+      case 2: return IsLeapYear(year) ? 29 : 28;
       case 4: case 6: case 9: case 11: return 30;
       default: return 31;
     }
   }
 
-  static bool isLeapYear(int year) {
+  // Helper function to check if a year is a leap year
+  // A year is a leap year if it is divisible by 4,
+  // except for end-of-century years, which must be divisible by 400.
+  static bool IsLeapYear(int year) {
     return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
   }
 };

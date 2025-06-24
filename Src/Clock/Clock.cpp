@@ -39,7 +39,7 @@ void Clock::TaskLoop(void* param) {
 
 void Clock::Tick() {
     // === Time Incrementation ===
-    currentTime.incrementSec();
+    currentTime.IncrementSeconds();
 
     // === Alarm Check ===
     if (alarmActive) {

@@ -61,10 +61,10 @@ class PageForDate : public EmptyPage
     {
         switch (event) {
             case MenuEvent::MoveFwd:
-                currentValue.incrementDay();
+                currentValue.IncrementDays();
                 break;
             case MenuEvent::MoveBack:
-                currentValue.DecrementDay();
+                currentValue.DecrementDays();
                 break;
             case MenuEvent::PushButton:
                 // Save the current currentValue and exit editing mode
@@ -77,10 +77,10 @@ class PageForDate : public EmptyPage
     {
         switch (event) {
             case MenuEvent::MoveFwd:
-                currentValue.incrementMonth();
+                currentValue.IncrementMonths();
                 break;
             case MenuEvent::MoveBack:
-                currentValue.DecrementMonth();
+                currentValue.DecrementMonths();
                 break;
             case MenuEvent::PushButton:
                 // Save the current currentValue and exit editing mode
@@ -93,10 +93,10 @@ class PageForDate : public EmptyPage
     {
         switch (event) {
             case MenuEvent::MoveFwd:
-                currentValue.incrementYear();
+                currentValue.IncrementYears();
                 break;
             case MenuEvent::MoveBack:
-                currentValue.DecrementYear();
+                currentValue.DecrementYears();
                 break;
             case MenuEvent::PushButton:
                 // Save the current currentValue and exit editing mode

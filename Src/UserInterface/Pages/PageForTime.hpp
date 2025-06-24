@@ -61,11 +61,11 @@ class PageForTime : public EmptyPage
         switch (event)
         {
             case MenuEvent::MoveFwd:
-                currentValue.incrementHour(false); // Do not propagate to day
+                currentValue.IncrementHours(false); // Do not propagate to day
                 break;
 
             case MenuEvent::MoveBack:
-                currentValue.DecrementHour(false); // Do not propagate to day
+                currentValue.DecrementHours(false); // Do not propagate to day
                 break;
 
             case MenuEvent::PushButton:
@@ -80,11 +80,11 @@ class PageForTime : public EmptyPage
         switch (event)
         {
             case MenuEvent::MoveFwd:
-                currentValue.incrementMinute(false); // Do not propagate to hour
+                currentValue.IncrementMinutes(false); // Do not propagate to hour
                 break;
 
             case MenuEvent::MoveBack:
-                currentValue.DecrementMinute(false); // Do not propagate to hour
+                currentValue.DecrementMinutes(false); // Do not propagate to hour
                 break;
 
             case MenuEvent::PushButton:
@@ -99,11 +99,11 @@ class PageForTime : public EmptyPage
         switch (event)
         {
             case MenuEvent::MoveFwd:
-                currentValue.incrementSec(false); // Do not propagate to minute/hour
+                currentValue.IncrementSeconds(false); // Do not propagate to minute/hour
                 break;
 
             case MenuEvent::MoveBack:
-                currentValue.DecrementSec(false); // Do not propagate to minute/hour
+                currentValue.DecrementSeconds(false); // Do not propagate to minute/hour
                 break;
 
             case MenuEvent::PushButton:
