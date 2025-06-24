@@ -6,18 +6,15 @@
 #include "../Drivers/RotaryEncoder.hpp"
 
 
-// Labels used for display
-static constexpr const char* MenuItemLabels[] = {
-    "Date",
-    "Time",
-    "Alarm",
-    "Relay",
-    "System",
-    "Exit"
-};
-
 MenuController::MenuController(Clock* clock, IDisplay* display)
-    : clock(clock), display(display) {}
+    : clock(clock), display(display) 
+    {
+        // Initialize the current menu item 
+        // to the "Exit" item to let user
+        // easily exit the menu in case
+        // he entered it by mistake
+        currentItem = &menuItems[static_cast<int>(MenuItemType::Exit)];
+    }
 
 void MenuController::ProcessEvent(MenuEvent event) {
     // DebugEventInput(event, 3, 0);
@@ -58,7 +55,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                 // Set the initial item to the "Cancel" item
                 // so if user entered the menu by mistake, he can exit it
                 // by pressing the button again
-                currentItem = MenuItem::Exit;
+                currentItem = &menuItems[static_cast<int>(MenuItemType::Exit)];
             }
             // Otherwise, we ignore the event in the main screen
             else
@@ -69,20 +66,27 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
 
         case MenuState::MenuScreen:
             if (event == MenuEvent::MoveFwd) {
-                currentItem = static_cast<MenuItem>((static_cast<int>(currentItem) + 1) % static_cast<int>(MenuItem::Count));
+                // Move to the next item in the menu
+                int nextItemIndex = currentItem->GetNextItemIndex();
+                currentItem = &menuItems[nextItemIndex];
             } else if (event == MenuEvent::MoveBack) {
-                currentItem = static_cast<MenuItem>((static_cast<int>(currentItem) + static_cast<int>(MenuItem::Count) - 1) % static_cast<int>(MenuItem::Count));
+                // Move to the previous item in the menu
+                int nextItemIndex = currentItem->GetPrevItemIndex();
+                currentItem = &menuItems[nextItemIndex];
             } else if (event == MenuEvent::PushButton) {
-                if (currentItem == MenuItem::Exit) {
+                if (currentItem->IsTypeOf(MenuItemType::Exit))
+                {
                     // If the user pressed the Exit button, we return to the main screen
                     menuState = MenuState::MainScreen;
 
                     // Clear the display to avoid showing the 
                     // rest elements of the menu after exiting it
                     display->Clear();
-                } else {
+                }
+                else
+                {
                     menuState = MenuState::EditScreen;
-                    if(currentItem == MenuItem::Date){
+                    if(currentItem->IsTypeOf(MenuItemType::Date)){
                         DateTime value;
                         clock->GetCurrentTime(value);
                         pageForDate = new PageForDate(display, 1, 6, value);
@@ -94,7 +98,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
             break;
 
         case MenuState::EditScreen:
-            if(currentItem == MenuItem::Date && pageForDate != nullptr)
+            if(currentItem->IsTypeOf(MenuItemType::Date) && pageForDate != nullptr)
             {
                 EventProcessingResult result = 
                     pageForDate->ProcessMenuEvent(event);
@@ -156,13 +160,13 @@ void MenuController::Render() {
 
         case MenuState::MenuScreen: {
             display->ShowText(0, 0, "Menu:");
-            display->ShowText(1, 2, MenuItemLabels[static_cast<int>(currentItem)]);
+            display->ShowText(1, 2, currentItem->GetName());
             break;
         }
 
         case MenuState::EditScreen: {
             display->ShowText(0, 0, "Edit:");
-            display->ShowText(1, 2, MenuItemLabels[static_cast<int>(currentItem)]);
+            display->ShowText(1, 2, currentItem->GetName());
 
             if(pageForDate != nullptr){
                 pageForDate->Render();

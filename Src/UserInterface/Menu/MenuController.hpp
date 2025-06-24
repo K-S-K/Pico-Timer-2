@@ -7,25 +7,16 @@
 #include "../Display/IDisplay.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 
-#include "MenuEvent.h"
 #include "../Pages/PageForDate.hpp"
+
+#include "MenuEvent.h"
+#include "MenuItem.hpp"
 
 enum class MenuState {
     MainScreen,
     MenuScreen,
     EditScreen
 };
-
-enum class MenuItem {
-    Date,
-    Time,
-    Alarm,
-    Relay,
-    System,
-    Exit,
-    Count
-};
-
 
 class MenuController {
 public:
@@ -39,12 +30,21 @@ private:
     void Render();
 
     MenuState menuState = MenuState::MainScreen;
-    MenuItem currentItem = MenuItem::Exit;
+    MenuItem *currentItem = nullptr;
     int currentEditValue = 0;
 
     Clock* clock = nullptr;
     IDisplay* display = nullptr;
     IPage *pageForDate = nullptr;
+
+    MenuItem menuItems[static_cast<int>(MenuItemType::Count)] = {
+        MenuItem(MenuItemType::Date, "Date"),
+        MenuItem(MenuItemType::Time, "Time"),
+        MenuItem(MenuItemType::Alarm, "Alarm"),
+        MenuItem(MenuItemType::Relay, "Relay"),
+        MenuItem(MenuItemType::System, "System"),
+        MenuItem(MenuItemType::Exit, "Exit")
+    };
 
     bool flag = false;
     int counter = 0;
