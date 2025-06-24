@@ -14,8 +14,8 @@ enum class MenuItemType {
 class MenuItem
 {
 public:
-        MenuItem(MenuItemType type, const char* name)
-            : type(type), name(name) {}
+        MenuItem(int index, MenuItemType type, const char* name)
+            : index(index), type(type), name(name) {}
 
         bool IsTypeOf(MenuItemType itemType) const {
             return type == itemType;
@@ -26,16 +26,21 @@ public:
             return type == itemType;
         }
 
-        int GetNextItemIndex() const {
-            return (static_cast<int>(type) + 1) % static_cast<int>(MenuItemType::Count);
+        int GetIndex() const {
+            return index;
         }
 
-        int GetPrevItemIndex() const {
-            return (static_cast<int>(type) + static_cast<int>(MenuItemType::Count) - 1) % static_cast<int>(MenuItemType::Count);
+        int GetNextItemIndex(int count) const {
+            return (static_cast<int>(type) + 1) % count;
+        }
+
+        int GetPrevItemIndex(int count) const {
+            return (static_cast<int>(type) + count - 1) % count;
         }
 
         
     private:
         MenuItemType type;
         const char* name;
+        const int index;
 };

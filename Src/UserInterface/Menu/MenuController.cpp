@@ -9,36 +9,28 @@
 MenuController::MenuController(Clock* clock, IDisplay* display)
     : clock(clock), display(display) 
     {
+        count = static_cast<int>(MenuItemType::Count);
+        // Initialize menu items
+        menuItems = new MenuItem[6]
+        {
+            MenuItem(0, MenuItemType::Date, "Date"),
+            MenuItem(1, MenuItemType::Time, "Time"),
+            MenuItem(2, MenuItemType::Alarm, "Alarm"),
+            MenuItem(3, MenuItemType::Relay, "Relay"),
+            MenuItem(4, MenuItemType::System, "System"),
+            MenuItem(5, MenuItemType::Exit, "Exit")
+        };
+
         // Initialize the current menu item 
         // to the "Exit" item to let user
         // easily exit the menu in case
         // he entered it by mistake
-        currentItem = &menuItems[static_cast<int>(MenuItemType::Exit)];
+        currentItem = &menuItems[5];
     }
 
 void MenuController::ProcessEvent(MenuEvent event) {
-    // DebugEventInput(event, 3, 0);
     ProcessMenuEvent(event);
     Render();
-}
-
-void MenuController::DebugEventInput(MenuEvent event, int row, int col)
-{
-    switch (event) {
-        case MenuEvent::MoveFwd:
-            counter++;
-            break;
-        case MenuEvent::MoveBack:
-            counter--;
-            break;
-        case MenuEvent::PushButton:
-            flag = !flag;
-            break; // Handled in the menuState machine
-    }
-
-    char buffer[32];
-    snprintf(buffer, sizeof(buffer), "%3s: %2d", flag ? "IN" : "OUT", counter);
-    display->ShowText(row, col, buffer);
 }
 
 void MenuController::ProcessMenuEvent(MenuEvent event) {
@@ -65,15 +57,16 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
             break;
 
         case MenuState::MenuScreen:
-            if (event == MenuEvent::MoveFwd) {
-                // Move to the next item in the menu
-                int nextItemIndex = currentItem->GetNextItemIndex();
-                currentItem = &menuItems[nextItemIndex];
-            } else if (event == MenuEvent::MoveBack) {
-                // Move to the previous item in the menu
-                int nextItemIndex = currentItem->GetPrevItemIndex();
-                currentItem = &menuItems[nextItemIndex];
-            } else if (event == MenuEvent::PushButton) {
+            if (event == MenuEvent::MoveFwd)
+            {
+                SelectNextItem();
+            }
+            else if (event == MenuEvent::MoveBack)
+            {
+                SelectPrevItem();
+            }
+            else if (event == MenuEvent::PushButton)
+            {
                 if (currentItem->IsTypeOf(MenuItemType::Exit))
                 {
                     // If the user pressed the Exit button, we return to the main screen

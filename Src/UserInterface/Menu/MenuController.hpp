@@ -29,6 +29,22 @@ private:
     void ProcessMenuEvent(MenuEvent event);
     void Render();
 
+    void SelectNextItem() {
+        currentItem = GetNextItem(currentItem);
+    }
+
+    void SelectPrevItem() {
+        currentItem = GetPrevItem(currentItem);
+    }
+
+    MenuItem* GetPrevItem(MenuItem* item) {
+        return &menuItems[item->GetPrevItemIndex(count)];
+    }
+
+    MenuItem* GetNextItem(MenuItem* item) {
+        return &menuItems[item->GetNextItemIndex(count)];
+    }
+
     MenuState menuState = MenuState::MainScreen;
     MenuItem *currentItem = nullptr;
     int currentEditValue = 0;
@@ -37,15 +53,6 @@ private:
     IDisplay* display = nullptr;
     IPage *pageForDate = nullptr;
 
-    MenuItem menuItems[static_cast<int>(MenuItemType::Count)] = {
-        MenuItem(MenuItemType::Date, "Date"),
-        MenuItem(MenuItemType::Time, "Time"),
-        MenuItem(MenuItemType::Alarm, "Alarm"),
-        MenuItem(MenuItemType::Relay, "Relay"),
-        MenuItem(MenuItemType::System, "System"),
-        MenuItem(MenuItemType::Exit, "Exit")
-    };
-
-    bool flag = false;
-    int counter = 0;
+    MenuItem *menuItems;
+    int count = 0;
 };
