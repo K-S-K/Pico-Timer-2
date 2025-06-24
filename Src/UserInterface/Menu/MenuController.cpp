@@ -78,7 +78,6 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                 }
                 else
                 {
-                    menuState = MenuState::EditScreen;
                     if(currentItem->IsTypeOf(MenuItemType::Date)){
                         IPage *page = currentItem->GetPage();
                         if(page == nullptr)
@@ -90,7 +89,8 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         }
                         page->Render();
                     }
-                    currentEditValue = 0;
+                    
+                    menuState = MenuState::EditScreen;
                 }
             }
             break;
@@ -126,9 +126,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                 }
             }
             else if (event == MenuEvent::MoveFwd) {
-                currentEditValue++;
             } else if (event == MenuEvent::MoveBack) {
-                currentEditValue--;
             } else if (event == MenuEvent::PushButton) {
                 menuState = MenuState::MainScreen;
                 // Saving logic will go here in the next steps

@@ -47,7 +47,6 @@ private:
 
     MenuState menuState = MenuState::MainScreen;
     MenuItem *currentItem = nullptr;
-    int currentEditValue = 0;
 
     int count = 0;
     Clock* clock = nullptr;
