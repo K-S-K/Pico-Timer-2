@@ -25,23 +25,17 @@ GPIOControl::GPIOControl(int pinTickLed, int pinAlrmLed)
 
 void GPIOControl::AlarmOn()
 {
-    GPIOCommand cmd= {};
-    cmd.type = GPIOCommandType::SetAlarmOn;
-    xQueueSend(commandQueue, &cmd, portMAX_DELAY);
+    EnqueeCommand(GPIOCommandType::SetAlarmOn);
 }
 
 void GPIOControl::AlarmOff()
 {
-    GPIOCommand cmd= {};
-    cmd.type = GPIOCommandType::SetAlarmOff;
-    xQueueSend(commandQueue, &cmd, portMAX_DELAY);
+    EnqueeCommand(GPIOCommandType::SetAlarmOff);
 }
 
 void GPIOControl::BlinkTickLed()
 {
-    GPIOCommand cmd = {};
-    cmd.type = GPIOCommandType::BlinkClockTick;
-    xQueueSend(commandQueue, &cmd, portMAX_DELAY);
+    EnqueeCommand(GPIOCommandType::BlinkClockTick);
 }
 
 void GPIOControl::InnerBlinkTickLed()
@@ -82,6 +76,13 @@ void GPIOControl::PrepareGPIO(int pin, int initialState)
     gpio_set_dir(pin, GPIO_OUT);
     gpio_pull_up(pin);
     gpio_put(pin, initialState);
+}
+
+void GPIOControl::EnqueeCommand(GPIOCommandType cmdType)
+{
+    GPIOCommand cmd = {};
+    cmd.type = cmdType;
+    xQueueSend(commandQueue, &cmd, portMAX_DELAY);
 }
 
 void GPIOControl::ProcessCommand(const GPIOCommand& cmd)

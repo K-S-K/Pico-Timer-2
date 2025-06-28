@@ -29,6 +29,7 @@ public:
 
 private:
     void PrepareGPIO(int pin, int initialState = 0);
+    void EnqueeCommand(GPIOCommandType cmdType);
     void ProcessCommand(const GPIOCommand& cmd);
     static void TaskLoop(void* param);
     void InnerBlinkTickLed();
