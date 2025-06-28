@@ -105,6 +105,18 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         page->Render();
                     }
 
+                    else if(currentItem->IsTypeOf(MenuItemType::Alarm)){
+                        IPage *page = currentItem->GetPage();
+                        if(page == nullptr)
+                        {
+                            DateTime value;
+                            clock->GetAlarmTime(value);
+                            page = new PageForTime(display, 1, 7, value);
+                            currentItem->SetPage(page);
+                        }
+                        page->Render();
+                    }
+
                     menuState = MenuState::EditScreen;
                 }
             }
@@ -143,6 +155,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             display->Clear();
                         }
                     }
+
                     else if(currentItem->IsTypeOf(MenuItemType::Time))
                     {
                         if(page != nullptr)
@@ -171,8 +184,38 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             display->Clear();
                         }
                     }
+
+                    else if(currentItem->IsTypeOf(MenuItemType::Alarm))
+                    {
+                        if(page != nullptr)
+                        {
+                            EventProcessingResult result = 
+                                page->ProcessMenuEvent(event);
+                            if(result == EventProcessingResult::Continue)
+                            {
+                                return; // Continue processing in the page
+                            }
+                            if(result == EventProcessingResult::Apply)
+                            {
+                                    DateTime clockValue;
+                                    clock->GetAlarmTime(clockValue);
+                                    DateTime editorValue;
+                                    ((PageForTime*)(page))->GetCurrentTime(editorValue);
+                                    clockValue.CopyTimeFrom(editorValue);
+
+                                    // Apply the changes to the clock
+                                    clock->SetAlarmTime(clockValue);
+                            }
+                            delete page;
+                            page = nullptr;
+                            currentItem->SetPage(nullptr);
+                            menuState = MenuState::MenuScreen;
+                            display->Clear();
+                        }
+                    }
                     // Add other page types here as needed
                 }
+
                 else if (event == MenuEvent::MoveFwd) {
                 } else if (event == MenuEvent::MoveBack) {
                 } else if (event == MenuEvent::PushButton) {
