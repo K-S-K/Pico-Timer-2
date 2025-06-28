@@ -98,10 +98,12 @@ void ClockDisplayTask(void* param) {
                     break;
 
                 case ClockEventType::AlarmOn:
+                    gpioControl->AlarmOn();
                     alarmIsOn = true;
                     break;
 
                 case ClockEventType::AlarmOff:
+                    gpioControl->AlarmOff();
                     alarmIsOn = false;
                     break;
             }
@@ -121,7 +123,7 @@ int main() {
   Display display(&lcd);
   display.Start();
 
-  GPIOControl gpioControl(PICO_DEFAULT_LED_PIN);
+  GPIOControl gpioControl(PICO_DEFAULT_LED_PIN, 6);
 
   static RotaryEncoder encoder(14, 15, 13);
   encoder.Init();

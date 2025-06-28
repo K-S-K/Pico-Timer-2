@@ -11,12 +11,30 @@
 
 #include "GPIOControl.hpp"
 
-GPIOControl::GPIOControl(int pinTickLed)
+GPIOControl::GPIOControl(int pinTickLed, int pinAlrmLed)
 {
     pin_tick_led = pinTickLed;
+    pin_alrm_led = pinAlrmLed;
+
+    PrepareGPIO(pin_alrm_led);
+
     commandQueue = xQueueCreate(8, sizeof(GPIOCommand));
 
     Start();
+}
+
+void GPIOControl::AlarmOn()
+{
+    GPIOCommand cmd= {};
+    cmd.type = GPIOCommandType::SetAlarmOn;
+    xQueueSend(commandQueue, &cmd, portMAX_DELAY);
+}
+
+void GPIOControl::AlarmOff()
+{
+    GPIOCommand cmd= {};
+    cmd.type = GPIOCommandType::SetAlarmOff;
+    xQueueSend(commandQueue, &cmd, portMAX_DELAY);
 }
 
 void GPIOControl::BlinkTickLed()
@@ -58,10 +76,26 @@ void GPIOControl::TaskLoop(void* param)
     }
 }
 
+void GPIOControl::PrepareGPIO(int pin, int initialState)
+{
+    gpio_init(pin);
+    gpio_set_dir(pin, GPIO_OUT);
+    gpio_pull_up(pin);
+    gpio_put(pin, initialState);
+}
+
 void GPIOControl::ProcessCommand(const GPIOCommand& cmd)
 {
     switch (cmd.type)
     {
+        case GPIOCommandType::SetAlarmOn:
+            gpio_put(pin_alrm_led, 1);
+            break;
+
+        case GPIOCommandType::SetAlarmOff:
+            gpio_put(pin_alrm_led, 0);
+            break;
+
         case GPIOCommandType::BlinkClockTick:
             InnerBlinkTickLed();
             break;

@@ -22,10 +22,13 @@ struct GPIOCommand {
 class GPIOControl
 {
 public:
-    GPIOControl(int pinTickLed);
+    GPIOControl(int pinTickLed, int pinAlrmLed);
+    void AlarmOn();
+    void AlarmOff();
     void BlinkTickLed();
 
 private:
+    void PrepareGPIO(int pin, int initialState = 0);
     void ProcessCommand(const GPIOCommand& cmd);
     static void TaskLoop(void* param);
     void InnerBlinkTickLed();
@@ -33,5 +36,6 @@ private:
 
 private:
     uint8_t pin_tick_led;
+    uint8_t pin_alrm_led;
     QueueHandle_t commandQueue;
 };
