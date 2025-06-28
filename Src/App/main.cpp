@@ -7,6 +7,7 @@
 #include "../Drivers/HD44780.hpp"
 #include "../Display/Display.hpp"
 #include "../Display/IDisplay.hpp"
+#include "../Drivers/GPIOControl.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 #include "../UserInterface/Menu/MenuController.hpp"
 
@@ -19,6 +20,7 @@ struct UiTaskContext {
 
 struct ClockTaskContext {
     QueueHandle_t clockQueue;
+    GPIOControl gpioControl;
     MenuController* menu;
     IDisplay* display;
 };
@@ -29,14 +31,14 @@ static void UserInterfaceTask(void *param) {
     MenuController* menu = uiCtx->menu;
     IDisplay* lcd = uiCtx->display;
 
-    EncoderEvent userEvent;
+    EncoderEvent clockEvent;
 
     while (true) {
-        if (xQueueReceive(q, &userEvent, portMAX_DELAY)) {
+        if (xQueueReceive(q, &clockEvent, portMAX_DELAY)) {
 
             // Convert EncoderEvent to MenuEvent
             MenuEvent menuEvt;
-            switch (userEvent.type) {
+            switch (clockEvent.type) {
                 case EncoderEventType::RotatedR:
                     menuEvt = MenuEvent::MoveFwd;
                     break;
@@ -58,6 +60,7 @@ static void UserInterfaceTask(void *param) {
 
 void ClockDisplayTask(void* param) {
     ClockTaskContext* uiCtx = static_cast<ClockTaskContext*>(param);
+    GPIOControl* gpioControl = &uiCtx->gpioControl;
     QueueHandle_t q = uiCtx->clockQueue;
     MenuController* menu = uiCtx->menu;
     IDisplay* lcd = uiCtx->display;
@@ -68,8 +71,8 @@ void ClockDisplayTask(void* param) {
     bool alarmIsOn = false;
 
     while (true) {
-        ClockEvent userEvent;
-        if (xQueueReceive(q, &userEvent, portMAX_DELAY)) {
+        ClockEvent clockEvent;
+        if (xQueueReceive(q, &clockEvent, portMAX_DELAY)) {
 
             // Check if we are in the main screen of the menu
             if(menu->GetMenuState() != MenuState::MainScreen) {
@@ -79,12 +82,13 @@ void ClockDisplayTask(void* param) {
             }
 
             // Process the clock event
-            switch (userEvent.type) {
+            switch (clockEvent.type) {
                 case ClockEventType::Tick:
+                    gpioControl->BlinkTickLed();
                     snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
-                             userEvent.currentTime.year, userEvent.currentTime.month, userEvent.currentTime.day);
+                             clockEvent.currentTime.year, clockEvent.currentTime.month, clockEvent.currentTime.day);
                     snprintf(line1, sizeof(line1), "%02d:%02d:%02d",
-                             userEvent.currentTime.hour, userEvent.currentTime.minute, userEvent.currentTime.second);
+                             clockEvent.currentTime.hour, clockEvent.currentTime.minute, clockEvent.currentTime.second);
                     snprintf(line2, sizeof(line2), "Alarm Bell is %3s", alarmIsOn ? "ON" : "OFF");
 
                     lcd->ShowText(0, 0, "Raspberry Pico Timer");
@@ -105,27 +109,9 @@ void ClockDisplayTask(void* param) {
     }
 }
 
-void vBlinkTask(void *you_need_this) {
-  for (;;) {
-
-    gpio_put(PICO_DEFAULT_LED_PIN, 1);
-    vTaskDelay(100);
-
-    gpio_put(PICO_DEFAULT_LED_PIN, 0);
-    vTaskDelay(100);
-
-    gpio_put(PICO_DEFAULT_LED_PIN, 1);
-    vTaskDelay(100);
-
-    gpio_put(PICO_DEFAULT_LED_PIN, 0);
-    vTaskDelay(700);
-  }
-}
-
 int main() {
   gpio_init(PICO_DEFAULT_LED_PIN);
   gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
-  xTaskCreate(vBlinkTask, "Blink Task", 128, NULL, 1, NULL);
 
 
   HD44780 lcd(0x27); // This address is common for many I2C LCDs, but it may vary.
@@ -135,7 +121,7 @@ int main() {
   Display display(&lcd);
   display.Start();
 
-  // display.ShowText(0, 0, "Hello, Pico Timer!");
+  GPIOControl gpioControl(PICO_DEFAULT_LED_PIN);
 
   static RotaryEncoder encoder(14, 15, 13);
   encoder.Init();
@@ -158,6 +144,7 @@ int main() {
 
   static ClockTaskContext clockCtx = {
     .clockQueue = clock.GetEventQueue(),
+    .gpioControl = gpioControl,
     .menu = &menu,
     .display = &display
   };

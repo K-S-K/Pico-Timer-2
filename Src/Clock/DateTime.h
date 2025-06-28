@@ -1,10 +1,10 @@
-#pragma once
-
 /*
   * Clock Related Types and Structures
     * This header defines the structures and enums used for managing date and time,
     * clock events, and alarm functionality in a system.
 */
+
+#pragma once
 
 #include "pico/stdlib.h"
 

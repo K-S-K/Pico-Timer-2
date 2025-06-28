@@ -1,5 +1,7 @@
 /*
-    * IDisplay.hpp - The interface for display operations.
+  * IDisplay.hpp - The interface for display abstraction layer.
+  * It defines the methods for clearing the display, setting backlight,
+  * and showing text on the display.
 */
 
 #pragma once

@@ -54,7 +54,7 @@ private:
     DateTime currentTime;
     DateTime alarmTime;
     bool alarmRinging = false; // true if the alarm is currently ringing
-    bool alarmActive = false; // true if the alarm is set and active
+    bool alarmEnabled = false; // true if the alarm is set and active
     bool running = true; // true if the clock is running (ticking)
 
     QueueHandle_t outQueue;

@@ -41,8 +41,12 @@ void Clock::Tick() {
     // === Time Incrementation ===
     currentTime.IncrementSeconds();
 
+    // === Normal Tick Event ===
+    ClockEvent evt{ClockEventType::Tick, currentTime};
+    xQueueSend(outQueue, &evt, 0);
+
     // === Alarm Check ===
-    if (alarmActive) {
+    if (alarmEnabled) {
         bool isAlarmNow =
             currentTime.hour == alarmTime.hour &&
             currentTime.minute == alarmTime.minute;
@@ -57,10 +61,6 @@ void Clock::Tick() {
             xQueueSend(outQueue, &evt, 0);
         }
     }
-
-    // === Normal Tick Event ===
-    ClockEvent evt{ClockEventType::Tick, currentTime};
-    xQueueSend(outQueue, &evt, 0);
 }
 
 void Clock::Pause() { running = false; }
@@ -68,7 +68,7 @@ void Clock::Resume() { running = true; }
 
 void Clock::SetCurrentTime(const DateTime& newTime) { currentTime = newTime; }
 void Clock::SetAlarmTime(const DateTime& newTime) { alarmTime = newTime; }
-void Clock::SetAlarmDuty(bool isActive) { alarmActive = isActive; }
+void Clock::SetAlarmDuty(bool enable) { alarmEnabled = enable; }
 
 void Clock::GetCurrentTime(DateTime& outTime) { outTime.CopyFrom(currentTime); }
 void Clock::GetAlarmTime(DateTime& outTime) { outTime.CopyFrom(alarmTime); }
