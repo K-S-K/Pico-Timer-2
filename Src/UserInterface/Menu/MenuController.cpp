@@ -111,7 +111,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         {
                             DateTime value;
                             clock->GetAlarmTime(value);
-                            page = new PageForTime(display, 1, 7, value);
+                            page = new PageForTime(display, 1, 7, value, PageForTimeMode::WithoutSeconds);
                             currentItem->SetPage(page);
                         }
                         page->Render();

@@ -6,12 +6,16 @@
 #include "InputElement.hpp"
 #include "EmptyPage.hpp"
 
+enum class PageForTimeMode {
+    WithSeconds,
+    WithoutSeconds,
+};
 
 class PageForTime : public EmptyPage
 {
     public:
-    PageForTime(IDisplay* display, int row, int col, DateTime valueIn)
-    : EmptyPage(display, row, col)
+    PageForTime(IDisplay* display, int row, int col, DateTime valueIn, PageForTimeMode mode = PageForTimeMode::WithSeconds)
+    : EmptyPage(display, row, col), mode(mode)
     {
         currentValue.CopyFrom(valueIn);
 
@@ -20,7 +24,10 @@ class PageForTime : public EmptyPage
         elements[i++] = new InputElement(display, 3, 0, InputElementType::Cancel);
         elements[i++] = new InputElement(display, row + 1, col + 3, InputElementType::Data, &PageForTime::AlterHourThunk, this);
         elements[i++] = new InputElement(display, row + 1, col + 6, InputElementType::Data, &PageForTime::AlterMinuteThunk, this);
-        elements[i++] = new InputElement(display, row + 1, col + 9, InputElementType::Data, &PageForTime::AlterSecondThunk, this);
+        if (mode == PageForTimeMode::WithSeconds)
+        {
+            elements[i++] = new InputElement(display, row + 1, col + 9, InputElementType::Data, &PageForTime::AlterSecondThunk, this);
+        }
         elements[i++] = new InputElement(display, 3, 0, InputElementType::Apply);
 
         MaxStopItemIndex = i - 1;
@@ -31,7 +38,22 @@ class PageForTime : public EmptyPage
     void Render()
     {
         char buffer[32];
-        snprintf(buffer, sizeof(buffer), ": %02d:%02d:%02d", currentValue.hour, currentValue.minute, currentValue.second);
+        // Display the current time in the respective format
+        // depending on the mode (with or without seconds)
+        switch (mode)
+        {
+            case PageForTimeMode::WithSeconds:
+                snprintf(buffer, sizeof(buffer), ": %02d:%02d:%02d", currentValue.hour, currentValue.minute, currentValue.second);
+                break;
+
+            case PageForTimeMode::WithoutSeconds:
+                snprintf(buffer, sizeof(buffer), ": %02d:%02d", currentValue.hour, currentValue.minute);
+                break;
+
+            default:
+                snprintf(buffer, sizeof(buffer), ": Unknown Mode");
+                break;
+        }
         display->ShowText(row, col, buffer);
 
         // Render the cursor and options
@@ -112,6 +134,8 @@ class PageForTime : public EmptyPage
                 break;
         }
     }
+
+    PageForTimeMode mode = PageForTimeMode::WithSeconds; // Default mode with seconds
 
     DateTime currentValue;
 };
