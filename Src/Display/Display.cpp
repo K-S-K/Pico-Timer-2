@@ -14,29 +14,61 @@
 #include <cstring>
 #include "Display.hpp"
 
-Display::Display(HD44780* lcd) {
+Display::Display(HD44780* lcd)
+{
     physicalDisplay = lcd;
     commandQueue = xQueueCreate(8, sizeof(DisplayCommand));
+
+    // Add custom symbos for ringing bell (in form of solid bell) 
+    // and not ringing bell  (in form of frame of bell)
+    uint8_t bellCharOn[8] =
+    {
+        0b00111,
+        0b01110,
+        0b11111,
+        0b11110,
+        0b11111,
+        0b01110,
+        0b00111,
+        0b00000
+    };
+    uint8_t bellCharOff[8] =
+    {
+        0b00110,
+        0b01110,
+        0b11110,
+        0b11110,
+        0b11110,
+        0b01110,
+        0b00110,
+        0b00000
+    };
+    physicalDisplay->CreateCustomCharacter(0, bellCharOn);
+    physicalDisplay->CreateCustomCharacter(1, bellCharOff);
 }
 
-void Display::Start() {
+void Display::Start()
+{
     xTaskCreate(TaskLoop, "DisplayTask", 1024, this, 1, nullptr);
 }
 
-void Display::Clear() {
+void Display::Clear()
+{
     DisplayCommand cmd = {};
     cmd.type = DisplayCommandType::Clear;
     xQueueSend(commandQueue, &cmd, portMAX_DELAY);
 }
 
-void Display::SetBacklight(bool on) {
+void Display::SetBacklight(bool on)
+{
     DisplayCommand cmd = {};
     cmd.type = DisplayCommandType::SetBacklight;
     cmd.backlight.on = on;
     xQueueSend(commandQueue, &cmd, portMAX_DELAY);
 }
 
-void Display::ShowText(int row, int col, const char* text) {
+void Display::ShowText(int row, int col, const char* text)
+{
     DisplayCommand cmd = {};
     cmd.type = DisplayCommandType::ShowText;
     cmd.showText.row = row;
@@ -46,18 +78,27 @@ void Display::ShowText(int row, int col, const char* text) {
     xQueueSend(commandQueue, &cmd, portMAX_DELAY);
 }
 
-void Display::TaskLoop(void* param) {
+void Display::PrintCustomCharacter(uint8_t row, uint8_t col, uint8_t location)
+{
+    physicalDisplay->PrintCustomCharacter(row, col, location);
+}
+
+void Display::TaskLoop(void* param)
+{
     auto* self = static_cast<Display*>(param);
     DisplayCommand cmd;
 
-    while (true) {
-        if (xQueueReceive(self->commandQueue, &cmd, portMAX_DELAY)) {
+    while (true)
+    {
+        if (xQueueReceive(self->commandQueue, &cmd, portMAX_DELAY))
+        {
             self->ProcessCommand(cmd);
         }
     }
 }
 
-void Display::ProcessCommand(const DisplayCommand& cmd) {
+void Display::ProcessCommand(const DisplayCommand& cmd)
+{
     switch (cmd.type) {
         case DisplayCommandType::Clear:
             physicalDisplay->Clear();

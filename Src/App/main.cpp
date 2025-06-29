@@ -69,7 +69,8 @@ void ClockDisplayTask(void* param) {
 
     char line0[32];
     char line1[32];
-    char line2[32];
+    // char line2[32];
+    char line3[32];
     bool alarmIsOn = false;
 
     while (true) {
@@ -86,25 +87,32 @@ void ClockDisplayTask(void* param) {
             // Process the clock event
             switch (clockEvent.type) {
                 case ClockEventType::Tick:
-                    gpioControl->BlinkTickLed();
-                    int seconds;
-                    bool enabled;
-                    DateTime alarmTime;
-                    clock->GetAlarmDuty(enabled);
-                    clock->GetAlarmLength(seconds);
-                    clock->GetAlarmTime(alarmTime);
+                    {
+                        gpioControl->BlinkTickLed();
+                        int seconds;
+                        bool enabled;
+                        DateTime alarmTime;
+                        clock->GetAlarmDuty(enabled);
+                        clock->GetAlarmLength(seconds);
+                        clock->GetAlarmTime(alarmTime);
 
-                    snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
-                             clockEvent.currentTime.year, clockEvent.currentTime.month, clockEvent.currentTime.day);
-                    snprintf(line1, sizeof(line1), "%02d:%02d:%02d",
-                             clockEvent.currentTime.hour, clockEvent.currentTime.minute, clockEvent.currentTime.second);
-                    snprintf(line2, sizeof(line2), "A %02d:%02d, %02ds, %s %s",  
-                             alarmTime.hour, alarmTime.minute, seconds, 
-                             enabled ? "On" : "Off", alarmIsOn ? "I" : "-");
+                        snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
+                                clockEvent.currentTime.year, clockEvent.currentTime.month, clockEvent.currentTime.day);
+                        snprintf(line1, sizeof(line1), "%02d:%02d:%02d",
+                                clockEvent.currentTime.hour, clockEvent.currentTime.minute, clockEvent.currentTime.second);
 
-                    lcd->ShowText(0, 0, line0);
-                    lcd->ShowText(0, 11, line1);
-                    lcd->ShowText(3, 0, line2);
+                        snprintf(line3, sizeof(line3), "%02d sec at %02d:%02d %s", 
+                                seconds, alarmTime.hour, alarmTime.minute, 
+                                enabled ? "On" : "Off");
+                        
+                        // Draw the bell symbol at the start of the line
+                        lcd->PrintCustomCharacter(3, 0, enabled && alarmIsOn ? 0x00 : 0x01);
+
+                        lcd->ShowText(0, 0, line0);
+                        lcd->ShowText(0, 11, line1);
+                        // lcd->ShowText(2, 2, line2);
+                        lcd->ShowText(3, 1, line3);
+                    }
                     break;
 
                 case ClockEventType::AlarmOn:
