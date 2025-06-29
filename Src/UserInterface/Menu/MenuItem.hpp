@@ -5,7 +5,8 @@
 enum class MenuItemType {
     Date,
     Time,
-    Alarm,
+    AlarmTime,
+    AlarmConfig,
     Relay,
     System,
     Exit,

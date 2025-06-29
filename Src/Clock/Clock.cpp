@@ -72,6 +72,7 @@ void Clock::SetAlarmDuty(bool enable) { alarmEnabled = enable; }
 void Clock::GetCurrentTime(DateTime& outTime) { outTime.CopyFrom(currentTime); }
 void Clock::GetAlarmTime(DateTime& outTime) { outTime.CopyFrom(alarmTimeBeg); }
 void Clock::GetAlarmLength(int& outSeconds) { outSeconds = alarmTimeSec; }
+void Clock::GetAlarmDuty(bool& outIsActive) { outIsActive = alarmEnabled; }
 
 QueueHandle_t Clock::GetEventQueue() const { return outQueue; }
 

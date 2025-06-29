@@ -44,6 +44,7 @@ public:
     void GetCurrentTime(DateTime& outTime);
     void GetAlarmTime(DateTime& outTime);
     void GetAlarmLength(int& outSeconds);
+    void GetAlarmDuty(bool& outIsActive);
 
     void Start();  // create the task
 

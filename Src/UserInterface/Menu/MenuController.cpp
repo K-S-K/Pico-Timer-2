@@ -8,27 +8,29 @@
 #include "../Pages/IPage.hpp"
 #include "../Pages/PageForDate.hpp"
 #include "../Pages/PageForTime.hpp"
+#include "../Pages/PageForAlrm.hpp"
 
 MenuController::MenuController(Clock* clock, IDisplay* display)
     : clock(clock), display(display) 
     {
         count = static_cast<int>(MenuItemType::Count);
         // Initialize menu items
-        menuItems = new MenuItem[6]
+        menuItems = new MenuItem[7]
         {
             MenuItem(0, MenuItemType::Date, "Clock Date", "Set Clock Date"),
             MenuItem(1, MenuItemType::Time, "Clock Time", "Set Clock Time"),
-            MenuItem(2, MenuItemType::Alarm, "Alarm Time", "Set Alarm Time"),
-            MenuItem(3, MenuItemType::Relay, "Relay", "Set Relay Time"),
-            MenuItem(4, MenuItemType::System, "System", "Configure System"),
-            MenuItem(5, MenuItemType::Exit, "Exit", "Exit Menu")
+            MenuItem(2, MenuItemType::AlarmTime, "Alarm Time", "Set Alarm Time"),
+            MenuItem(3, MenuItemType::AlarmConfig, "Alarm Config", "Configure Alarm"),
+            MenuItem(4, MenuItemType::Relay, "Relay", "Set Relay Time"),
+            MenuItem(5, MenuItemType::System, "System", "Configure System"),
+            MenuItem(6, MenuItemType::Exit, "Exit", "Exit Menu")
         };
 
         // Initialize the current menu item 
         // to the "Exit" item to let user
         // easily exit the menu in case
         // he entered it by mistake
-        currentItem = &menuItems[5];
+        currentItem = &menuItems[6];
     }
 
 void MenuController::ProcessEvent(MenuEvent event) {
@@ -107,7 +109,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         page->Render();
                     }
 
-                    else if(currentItem->IsTypeOf(MenuItemType::Alarm)){
+                    else if(currentItem->IsTypeOf(MenuItemType::AlarmTime)){
                         IPage *page = currentItem->GetPage();
                         if(page == nullptr)
                         {
@@ -119,6 +121,23 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         page->PrepareDisplay();
                         page->Render();
                     }
+
+                    else if(currentItem->IsTypeOf(MenuItemType::AlarmConfig)){
+                        IPage *page = currentItem->GetPage();
+                        if(page == nullptr)
+                        {
+                            int seconds;
+                            bool enabled;
+                            clock->GetAlarmDuty(enabled);
+                            clock->GetAlarmLength(seconds);
+                            page = new PageForAlrm(display, 1, 2, seconds, enabled, currentItem->GetHeader());
+                            currentItem->SetPage(page);
+                        }
+                        page->PrepareDisplay();
+                        page->Render();
+                    }
+                    
+                    // Add other page types here as needed
 
                     menuState = MenuState::EditScreen;
                 }
@@ -188,7 +207,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         }
                     }
 
-                    else if(currentItem->IsTypeOf(MenuItemType::Alarm))
+                    else if(currentItem->IsTypeOf(MenuItemType::AlarmTime))
                     {
                         if(page != nullptr)
                         {
@@ -216,6 +235,33 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             display->Clear();
                         }
                     }
+
+                    else if(currentItem->IsTypeOf(MenuItemType::AlarmConfig))
+                    {
+                        if(page != nullptr)
+                        {
+                            EventProcessingResult result = 
+                                page->ProcessMenuEvent(event);
+                            if(result == EventProcessingResult::Continue)
+                            {
+                                return; // Continue processing in the page
+                            }
+                            if(result == EventProcessingResult::Apply)
+                            {
+                                    bool enabled;
+                                    int seconds;
+                                    ((PageForAlrm*)(page))->GetCurrentState(seconds, enabled);
+                                    clock->SetAlarmDuty(enabled);
+                                    clock->SetAlarmLength(seconds);
+                            }
+                            delete page;
+                            page = nullptr;
+                            currentItem->SetPage(nullptr);
+                            menuState = MenuState::MenuScreen;
+                            display->Clear();
+                        }
+                    }
+
                     // Add other page types here as needed
                 }
 
