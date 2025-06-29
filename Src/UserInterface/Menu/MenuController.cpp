@@ -10,8 +10,8 @@
 #include "../Pages/PageForTime.hpp"
 #include "../Pages/PageForAlrm.hpp"
 
-MenuController::MenuController(Clock* clock, IDisplay* display)
-    : clock(clock), display(display) 
+MenuController::MenuController(Clock* clock, Alarm* alarm, IDisplay* display)
+    : clock(clock), alarm(alarm), display(display) 
     {
         count = static_cast<int>(MenuItemType::Count);
         // Initialize menu items
@@ -114,7 +114,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         if(page == nullptr)
                         {
                             DateTime value;
-                            clock->GetAlarmTime(value);
+                            alarm->GetAlarmTime(value);
                             page = new PageForTime(display, 1, 4, value, currentItem->GetHeader(), PageForTimeMode::WithoutSeconds);
                             currentItem->SetPage(page);
                         }
@@ -128,8 +128,8 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         {
                             int seconds;
                             bool enabled;
-                            clock->GetAlarmDuty(enabled);
-                            clock->GetAlarmLength(seconds);
+                            alarm->GetAlarmDuty(enabled);
+                            alarm->GetAlarmLength(seconds);
                             page = new PageForAlrm(display, 1, 2, seconds, enabled, currentItem->GetHeader());
                             currentItem->SetPage(page);
                         }
@@ -220,13 +220,13 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             if(result == EventProcessingResult::Apply)
                             {
                                     DateTime clockValue;
-                                    clock->GetAlarmTime(clockValue);
+                                    alarm->GetAlarmTime(clockValue);
                                     DateTime editorValue;
                                     ((PageForTime*)(page))->GetCurrentTime(editorValue);
                                     clockValue.CopyTimeFrom(editorValue);
 
                                     // Apply the changes to the clock
-                                    clock->SetAlarmTime(clockValue);
+                                    alarm->SetAlarmTime(clockValue);
                             }
                             delete page;
                             page = nullptr;
@@ -251,8 +251,8 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                                     bool enabled;
                                     int seconds;
                                     ((PageForAlrm*)(page))->GetCurrentState(seconds, enabled);
-                                    clock->SetAlarmDuty(enabled);
-                                    clock->SetAlarmLength(seconds);
+                                    alarm->SetAlarmDuty(enabled);
+                                    alarm->SetAlarmLength(seconds);
                             }
                             delete page;
                             page = nullptr;

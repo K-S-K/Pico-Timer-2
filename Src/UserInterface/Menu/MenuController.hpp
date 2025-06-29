@@ -4,6 +4,7 @@
 #include "queue.h"
 
 #include "../Clock/Clock.hpp"
+#include "../Clock/Alarm.hpp"
 #include "../Display/IDisplay.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 
@@ -18,7 +19,7 @@ enum class MenuState {
 
 class MenuController {
 public:
-    MenuController(Clock* clock, IDisplay* display);
+    MenuController(Clock* clock, Alarm* alarm, IDisplay* display);
     void ProcessEvent(MenuEvent event);
     MenuState GetMenuState() const { return menuState; }
 
@@ -48,6 +49,7 @@ private:
 
     int count = 0;
     Clock* clock = nullptr;
+    Alarm* alarm = nullptr;
     IDisplay* display = nullptr;
     MenuItem *menuItems = nullptr;
 };

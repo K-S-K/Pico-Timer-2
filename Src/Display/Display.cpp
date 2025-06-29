@@ -23,24 +23,24 @@ Display::Display(HD44780* lcd)
     // and not ringing bell  (in form of frame of bell)
     uint8_t bellCharOn[8] =
     {
+        0b00011,
         0b00111,
-        0b01110,
         0b11111,
-        0b11110,
         0b11111,
-        0b01110,
+        0b11111,
         0b00111,
+        0b00011,
         0b00000
     };
     uint8_t bellCharOff[8] =
     {
-        0b00110,
-        0b01110,
-        0b11110,
-        0b11110,
-        0b11110,
-        0b01110,
-        0b00110,
+        0b00011,
+        0b00101,
+        0b11001,
+        0b10001,
+        0b11001,
+        0b00101,
+        0b00011,
         0b00000
     };
     physicalDisplay->CreateCustomCharacter(0, bellCharOn);
