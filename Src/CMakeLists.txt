@@ -37,6 +37,7 @@ add_executable(${NAME}
         ./Clock/Alarm.cpp
         ./Display/Display.cpp
         ./Drivers/HD44780.cpp
+        ./Drivers/PiezoSound.cpp
         ./Drivers/GPIOControl.cpp
         ./Drivers/RotaryEncoder.cpp
         ./UserInterface/Menu/MenuController.cpp

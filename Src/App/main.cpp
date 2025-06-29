@@ -8,6 +8,7 @@
 #include "../Drivers/HD44780.hpp"
 #include "../Display/Display.hpp"
 #include "../Display/IDisplay.hpp"
+#include "../Drivers/PiezoSound.hpp"
 #include "../Drivers/GPIOControl.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 #include "../UserInterface/Menu/MenuController.hpp"
@@ -29,6 +30,7 @@ struct ClockTaskContext {
 };
 
 struct AlarmTaskContext {
+    PiezoSound sound;
     GPIOControl gpio;
     Alarm* alarm;
 };
@@ -70,6 +72,7 @@ void AlarmTask(void* param) {
     AlarmTaskContext* alarmCtx = static_cast<AlarmTaskContext*>(param);
     GPIOControl* gpio = &alarmCtx->gpio;
     Alarm* alarm = alarmCtx->alarm;
+    PiezoSound* sound = &alarmCtx->sound;
     QueueHandle_t q = alarm->GetEventQueue();
 
     while (true) {
@@ -78,6 +81,9 @@ void AlarmTask(void* param) {
             switch (alarmEvent.type) {
                 case AlarmEventType::AlarmOn:
                     gpio->AlarmOn();
+                    // sound->PlayAlarmStart(); // Play alarm sound
+                    sound->PlayHourlyCuckoo(); // Play hourly cuckoo sound
+
                     break;
 
                 case AlarmEventType::AlarmOff:
@@ -165,10 +171,12 @@ int main() {
     Display display(&lcd);
     display.Start();
 
-    GPIOControl gpio(PICO_DEFAULT_LED_PIN, 6);
-
     static RotaryEncoder encoder(14, 15, 13);
     encoder.Init();
+
+    PiezoSound sound(8);
+
+    GPIOControl gpio(PICO_DEFAULT_LED_PIN, 6);
 
     // Create Alarm instance
     static Alarm alarm(4);
@@ -191,8 +199,9 @@ int main() {
     };
 
     AlarmTaskContext alarmCtx = {
+        .sound = sound,
         .gpio = gpio,
-        .alarm = &alarm
+        .alarm = &alarm,
     };
 
     static ClockTaskContext clockCtx = {
