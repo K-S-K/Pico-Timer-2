@@ -26,22 +26,24 @@ void PiezoSound::PlayTone(uint frequency, uint duration_ms) {
     uint slice = pwm_gpio_to_slice_num(pin);
     uint channel = pwm_gpio_to_channel(pin);
 
-    // Ensure wrap value (TOP) fits in 16-bit range and gives usable frequency
-    uint sys_clock = clock_get_hz(clk_sys); // Usually 125 MHz
-    uint divider16 = 1; // integer divide base value (divide / 16)
+    uint sys_clock = clock_get_hz(clk_sys); // 125 MHz typically
+
+    // Calculate initial top assuming clkdiv = 1.0
+    float clkdiv = 1.0f;
     uint top = sys_clock / frequency;
 
+    // If top is too large, scale clkdiv so top fits in 16-bit range
     if (top > 65535) {
+        clkdiv = (float)top / 65535.0f;
         top = 65535;
     }
 
     pwm_config cfg = pwm_get_default_config();
-    pwm_config_set_clkdiv(&cfg, 1.0f); // No division
+    pwm_config_set_clkdiv(&cfg, clkdiv);
     pwm_config_set_wrap(&cfg, top);
     pwm_init(slice, &cfg, true);
 
-    pwm_set_chan_level(slice, channel, top / 2); // 50% duty = square wave
-
+    pwm_set_chan_level(slice, channel, top / 2); // 50% duty
     vTaskDelay(pdMS_TO_TICKS(duration_ms));
 
     pwm_set_enabled(slice, false);
@@ -84,9 +86,23 @@ void PiezoSound::PlaySequence(SoundCommand command) {
 
         case SoundCommand::HourlyCuckoo:
             PlayTone(800, 200);
-            vTaskDelay(pdMS_TO_TICKS(200));
+            vTaskDelay(pdMS_TO_TICKS(50));
             PlayTone(600, 200);
-            vTaskDelay(pdMS_TO_TICKS(200));
+            break;
+
+        case SoundCommand::Sweep:
+            {
+                const int start_freq = 200;   // Start of sweep (Hz)
+                const int end_freq = 2000;    // End of sweep (Hz)
+                const int step = 50;          // Hz step
+                const int duration = 50;      // ms per tone
+
+                for (int freq = start_freq; freq <= end_freq; freq += step)
+                {
+                    PlayTone(freq, duration);
+                    vTaskDelay(pdMS_TO_TICKS(10)); // small pause for smoothness
+                }
+            }
             break;
     }
 }

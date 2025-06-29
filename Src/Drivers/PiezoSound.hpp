@@ -10,9 +10,8 @@
 #include <stdint.h>
 #include "queue.h"
 
-// class PiezoSound
-
 enum class SoundCommand {
+    Sweep,
     MenuBeep,
     AlarmStart,
     HourlyCuckoo
@@ -21,6 +20,10 @@ enum class SoundCommand {
 class PiezoSound {
 public:
     PiezoSound(uint8_t pin);
+
+    void PlaySweep() {
+        EnqueeCommand(SoundCommand::Sweep);
+    }
 
     void PlayMenuBeep() {
         EnqueeCommand(SoundCommand::MenuBeep);

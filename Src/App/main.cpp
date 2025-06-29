@@ -82,7 +82,8 @@ void AlarmTask(void* param) {
                 case AlarmEventType::AlarmOn:
                     gpio->AlarmOn();
                     // sound->PlayAlarmStart(); // Play alarm sound
-                    sound->PlayHourlyCuckoo(); // Play hourly cuckoo sound
+                    // sound->PlayHourlyCuckoo(); // Play hourly cuckoo sound
+                    sound->PlaySweep(); // Play a sweep sound
 
                     break;
 
