@@ -16,7 +16,8 @@ HD44780::HD44780(uint8_t i2c_address, int i2c_port)
     : _i2c_address(i2c_address), _i2c_port(i2c_port),
       _backlight(LCD_BACKLIGHT) {}
 
-void HD44780::Init() {
+void HD44780::Init()
+{
 
   // Initialize I2C
   i2c_init((_i2c_port == 0) ? i2c0 : i2c1, 100000);
@@ -46,17 +47,20 @@ void HD44780::Init() {
   WriteCommand(0x0C); // Display on, no cursor
 }
 
-void HD44780::Clear() {
+void HD44780::Clear()
+{
   WriteCommand(0x01);
   sleep_ms(2);
 }
 
-void HD44780::SetCursor(uint8_t row, uint8_t col) {
+void HD44780::SetCursor(uint8_t row, uint8_t col)
+{
   static const uint8_t row_offsets[] = {0x00, 0x40, 0x14, 0x54};
   WriteCommand(0x80 | (col + row_offsets[row]));
 }
 
-void HD44780::PrintString(const char *text) {
+void HD44780::PrintString(const char *text)
+{
   while (*text) {
     PrintSymbol(*text++);
   }
@@ -64,28 +68,61 @@ void HD44780::PrintString(const char *text) {
 
 void HD44780::PrintSymbol(char c) { WriteByte(c, RS_BIT); }
 
-void HD44780::SetBacklight(bool backlight) {
+void HD44780::SetBacklight(bool backlight)
+{
   _backlight = backlight ? LCD_BACKLIGHT : 0;
+}
+
+void HD44780::PrintCustomCharacter(uint8_t row, uint8_t col, uint8_t location)
+{
+  // Only 8 locations available
+  if (location >= 8) {
+    return; // Invalid location
+  }
+  
+  // Set cursor to the specified position
+  SetCursor(row, col);
+  
+  // Write the custom character from CGRAM
+  WriteData(location);
+}
+
+void HD44780::CreateCustomCharacter(uint8_t location, uint8_t charmap[])
+{
+  // Only 8 locations available
+  if (location >= 8) {
+    return; // Invalid location
+  } 
+  
+  // Custom characters are stored in CGRAM
+  WriteCommand(0x40 | (location << 3)); // Set CGRAM address
+  for (int i = 0; i < 8; i++) {
+    WriteData(charmap[i]); // Write character data
+  }
+  WriteCommand(0x80); // Return to DDRAM
 }
 
 void HD44780::WriteCommand(uint8_t cmd) { WriteByte(cmd, 0); }
 
 void HD44780::WriteData(uint8_t data) { WriteByte(data, RS_BIT); }
 
-void HD44780::WriteByte(uint8_t value, uint8_t mode) {
+void HD44780::WriteByte(uint8_t value, uint8_t mode)
+{
   uint8_t high = (value & 0xF0) | _backlight | mode;
   uint8_t low = ((value << 4) & 0xF0) | _backlight | mode;
   WriteHalf(high);
   WriteHalf(low);
 }
 
-void HD44780::WriteHalf(uint8_t value) {
+void HD44780::WriteHalf(uint8_t value)
+{
   i2c_write_blocking((_i2c_port == 0) ? i2c0 : i2c1, 
                       _i2c_address, &value, 1, true);
   PulseEnable(value);
 }
 
-void HD44780::PulseEnable(uint8_t data) {
+void HD44780::PulseEnable(uint8_t data)
+{
   uint8_t data_with_enable = data | ENABLE_BIT;
   uint8_t data_without_enable = data & ~ENABLE_BIT;
 

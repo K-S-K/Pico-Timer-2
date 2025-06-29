@@ -10,17 +10,17 @@
 class PageForDate : public EmptyPage
 {
     public:
-    PageForDate(IDisplay* display, int row, int col, DateTime valueIn)
-    : EmptyPage(display, row, col)
+    PageForDate(IDisplay* display, int row, int col, DateTime valueIn, const char* headerText)
+    : EmptyPage(display, row, col, headerText)
     {
         currentValue.CopyFrom(valueIn);
 
         elements = new InputElement*[5]; // 3 editable fields + Cancel/Apply
         int i = 0;
         elements[i++] = new InputElement(display, 3, 0, InputElementType::Cancel);
-        elements[i++] = new InputElement(display, row + 1, col + 5, InputElementType::Data, &PageForDate::AlterYearThunk, this);
-        elements[i++] = new InputElement(display, row + 1, col + 8, InputElementType::Data, &PageForDate::AlterMonthThunk, this);
-        elements[i++] = new InputElement(display, row + 1, col + 11, InputElementType::Data, &PageForDate::AlterDayThunk, this);
+        elements[i++] = new InputElement(display, row + 1, col + 3, InputElementType::Data, &PageForDate::AlterYearThunk, this);
+        elements[i++] = new InputElement(display, row + 1, col + 6, InputElementType::Data, &PageForDate::AlterMonthThunk, this);
+        elements[i++] = new InputElement(display, row + 1, col + 9, InputElementType::Data, &PageForDate::AlterDayThunk, this);
         elements[i++] = new InputElement(display, 3, 0, InputElementType::Apply);
 
         MaxStopItemIndex = i - 1;
@@ -31,7 +31,7 @@ class PageForDate : public EmptyPage
     void Render()
     {
         char buffer[32];
-        snprintf(buffer, sizeof(buffer), ": %04d.%02d.%02d", currentValue.year, currentValue.month, currentValue.day);
+        snprintf(buffer, sizeof(buffer), "%04d.%02d.%02d", currentValue.year, currentValue.month, currentValue.day);
         display->ShowText(row, col, buffer);
 
         // Render the cursor and options

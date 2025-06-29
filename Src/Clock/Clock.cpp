@@ -20,7 +20,7 @@ Clock::Clock(int qLength){
 
     // init default time (example)
     currentTime = {2025, 1, 1, 12, 0, 0};
-    alarmTime = {2025, 1, 1, 7, 0, 0};
+    alarmTimeBeg = {2025, 1, 1, 7, 0, 0};
 }
 
 void Clock::Start() {
@@ -41,11 +41,13 @@ void Clock::Tick() {
     // === Time Incrementation ===
     currentTime.IncrementSeconds();
 
+    // === Normal Tick Event ===
+    ClockEvent evt{ClockEventType::Tick, currentTime};
+    xQueueSend(outQueue, &evt, 0);
+
     // === Alarm Check ===
-    if (alarmActive) {
-        bool isAlarmNow =
-            currentTime.hour == alarmTime.hour &&
-            currentTime.minute == alarmTime.minute;
+    if (alarmEnabled) {
+        bool isAlarmNow = IsAlarmTime();
 
         if (isAlarmNow && !alarmRinging) {
             alarmRinging = true;
@@ -57,20 +59,34 @@ void Clock::Tick() {
             xQueueSend(outQueue, &evt, 0);
         }
     }
-
-    // === Normal Tick Event ===
-    ClockEvent evt{ClockEventType::Tick, currentTime};
-    xQueueSend(outQueue, &evt, 0);
 }
 
 void Clock::Pause() { running = false; }
 void Clock::Resume() { running = true; }
 
 void Clock::SetCurrentTime(const DateTime& newTime) { currentTime = newTime; }
-void Clock::SetAlarmTime(const DateTime& newTime) { alarmTime = newTime; }
-void Clock::SetAlarmDuty(bool isActive) { alarmActive = isActive; }
+void Clock::SetAlarmTime(const DateTime& newTime) { alarmTimeBeg = newTime; CalcAlarmTimeEnd(); }
+void Clock::SetAlarmLength(int seconds){ alarmTimeSec = seconds; CalcAlarmTimeEnd();}
+void Clock::SetAlarmDuty(bool enable) { alarmEnabled = enable; }
 
 void Clock::GetCurrentTime(DateTime& outTime) { outTime.CopyFrom(currentTime); }
-void Clock::GetAlarmTime(DateTime& outTime) { outTime.CopyFrom(alarmTime); }
+void Clock::GetAlarmTime(DateTime& outTime) { outTime.CopyFrom(alarmTimeBeg); }
+void Clock::GetAlarmLength(int& outSeconds) { outSeconds = alarmTimeSec; }
+void Clock::GetAlarmDuty(bool& outIsActive) { outIsActive = alarmEnabled; }
 
 QueueHandle_t Clock::GetEventQueue() const { return outQueue; }
+
+void Clock::CalcAlarmTimeEnd() 
+{
+    // Calculate the end time of the alarm
+    alarmTimeEnd.CopyFrom(alarmTimeBeg);
+    alarmTimeEnd.AddSeconds(alarmTimeSec);
+}
+
+bool Clock::IsAlarmTime() const 
+{
+    return
+        alarmTimeBeg.hour <= currentTime.hour && currentTime.hour <= alarmTimeEnd.hour &&
+        alarmTimeBeg.minute <= currentTime.minute && currentTime.minute <= alarmTimeEnd.minute &&
+        alarmTimeBeg.second <= currentTime.second && currentTime.second < alarmTimeEnd.second;
+}

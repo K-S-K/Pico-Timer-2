@@ -53,6 +53,7 @@ public:
     void Clear() override;
     void SetBacklight(bool on) override;
     void ShowText(int row, int col, const char* text) override;
+    void PrintCustomCharacter(uint8_t row, uint8_t col, uint8_t location) override;
 
 private:
     static void TaskLoop(void* param);

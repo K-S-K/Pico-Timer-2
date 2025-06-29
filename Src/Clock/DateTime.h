@@ -1,10 +1,10 @@
-#pragma once
-
 /*
   * Clock Related Types and Structures
     * This header defines the structures and enums used for managing date and time,
     * clock events, and alarm functionality in a system.
 */
+
+#pragma once
 
 #include "pico/stdlib.h"
 
@@ -35,6 +35,29 @@ struct DateTime {
     hour = other.hour;
     minute = other.minute;
     second = other.second;
+  }
+
+  void AddSeconds(int seconds, bool propagate = true)
+  {
+    // We do not add negative seconds
+    // If seconds is negative, we do nothing
+    if(seconds < 0)
+    {
+        return;
+    }
+
+    // If seconds >= 60, limit it to 59
+    if (seconds >= 60)
+    {
+        seconds = 59;
+    }
+    
+    second += seconds;
+    if (second >= 60)
+    {
+        second -= 60;
+        IncrementMinutes(propagate);
+    }
   }
 
   void IncrementSeconds(bool propagate = true)

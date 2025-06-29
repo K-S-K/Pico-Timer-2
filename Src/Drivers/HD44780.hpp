@@ -17,6 +17,8 @@ public:
   void PrintString(const char *text);
   void PrintSymbol(char c);
   void SetBacklight(bool backlight);
+  void CreateCustomCharacter(uint8_t location, uint8_t charmap[]);
+  void PrintCustomCharacter(uint8_t row, uint8_t col, uint8_t location);
 
 private:
   void WriteCommand(uint8_t cmd);
