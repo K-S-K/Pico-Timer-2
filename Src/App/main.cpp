@@ -23,6 +23,7 @@ struct ClockTaskContext {
     GPIOControl gpioControl;
     MenuController* menu;
     IDisplay* display;
+    Clock* clock;
 };
 
 static void UserInterfaceTask(void *param) {
@@ -64,6 +65,7 @@ void ClockDisplayTask(void* param) {
     QueueHandle_t q = uiCtx->clockQueue;
     MenuController* menu = uiCtx->menu;
     IDisplay* lcd = uiCtx->display;
+    Clock* clock = uiCtx->clock;
 
     char line0[32];
     char line1[32];
@@ -85,15 +87,23 @@ void ClockDisplayTask(void* param) {
             switch (clockEvent.type) {
                 case ClockEventType::Tick:
                     gpioControl->BlinkTickLed();
+                    int seconds;
+                    bool enabled;
+                    DateTime alarmTime;
+                    clock->GetAlarmDuty(enabled);
+                    clock->GetAlarmLength(seconds);
+                    clock->GetAlarmTime(alarmTime);
+
                     snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
                              clockEvent.currentTime.year, clockEvent.currentTime.month, clockEvent.currentTime.day);
                     snprintf(line1, sizeof(line1), "%02d:%02d:%02d",
                              clockEvent.currentTime.hour, clockEvent.currentTime.minute, clockEvent.currentTime.second);
-                    snprintf(line2, sizeof(line2), "Alarm Bell is %3s", alarmIsOn ? "ON" : "OFF");
+                    snprintf(line2, sizeof(line2), "A %02d:%02d, %02ds, %s %s",  
+                             alarmTime.hour, alarmTime.minute, seconds, 
+                             enabled ? "On" : "Off", alarmIsOn ? "I" : "-");
 
-                    lcd->ShowText(0, 0, "Raspberry Pico Timer");
-                    lcd->ShowText(1, 0, line0);
-                    lcd->ShowText(1, 11, line1);
+                    lcd->ShowText(0, 0, line0);
+                    lcd->ShowText(0, 11, line1);
                     lcd->ShowText(3, 0, line2);
                     break;
 
@@ -148,7 +158,8 @@ int main() {
     .clockQueue = clock.GetEventQueue(),
     .gpioControl = gpioControl,
     .menu = &menu,
-    .display = &display
+    .display = &display,
+    .clock = &clock
   };
 
   // Start Encoder task

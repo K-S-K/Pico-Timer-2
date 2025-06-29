@@ -19,7 +19,11 @@ class PageForTime : public EmptyPage
     {
         currentValue.CopyFrom(valueIn);
 
-        elements = new InputElement*[5]; // 3 editable fields + Cancel/Apply
+        int elementsCount = 
+            mode == PageForTimeMode::WithSeconds ? 5 : 
+            mode == PageForTimeMode::WithoutSeconds ? 4 :
+            5; // Default to 5 if mode is not recognized
+        elements = new InputElement*[elementsCount]; // 3 editable fields + Cancel/Apply
         int i = 0;
         elements[i++] = new InputElement(display, 3, 0, InputElementType::Cancel);
         elements[i++] = new InputElement(display, row + 1, col + 1, InputElementType::Data, &PageForTime::AlterHourThunk, this);
