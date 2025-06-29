@@ -20,8 +20,6 @@
 
 enum class ClockEventType {
     Tick,
-    AlarmOn,
-    AlarmOff
 };
 
 struct ClockEvent {
@@ -37,14 +35,8 @@ public:
     void Pause();  // pauses ticking
 
     void SetCurrentTime(const DateTime& newTime);
-    void SetAlarmTime(const DateTime& alarmTime);
-    void SetAlarmLength(int seconds);
-    void SetAlarmDuty(bool isActive);
 
     void GetCurrentTime(DateTime& outTime);
-    void GetAlarmTime(DateTime& outTime);
-    void GetAlarmLength(int& outSeconds);
-    void GetAlarmDuty(bool& outIsActive);
 
     void Start();  // create the task
 
@@ -54,17 +46,8 @@ private:
     static void TaskLoop(void* param);
     void Tick();  // the per-second logic
 
-    void CalcAlarmTimeEnd();
-    bool IsAlarmTime() const;
-
     DateTime currentTime;
-    DateTime alarmTimeBeg;
-    DateTime alarmTimeEnd;
-    int alarmTimeSec = 10; // seconds to ring the alarm
-    bool alarmRinging = false; // true if the alarm is currently ringing
-    bool alarmEnabled = false; // true if the alarm is set and active
     bool running = true; // true if the clock is running (ticking)
 
     QueueHandle_t outQueue;
-    TaskHandle_t taskHandle = nullptr;
 };

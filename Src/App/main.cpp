@@ -4,6 +4,7 @@
 #include <cstdio>
 
 #include "../Clock/Clock.hpp"
+#include "../Clock/Alarm.hpp"
 #include "../Drivers/HD44780.hpp"
 #include "../Display/Display.hpp"
 #include "../Display/IDisplay.hpp"
@@ -23,7 +24,13 @@ struct ClockTaskContext {
     GPIOControl gpioControl;
     MenuController* menu;
     IDisplay* display;
+    Alarm* alarm;
     Clock* clock;
+};
+
+struct AlarmTaskContext {
+    GPIOControl gpioControl;
+    Alarm* alarm;
 };
 
 static void UserInterfaceTask(void *param) {
@@ -59,12 +66,35 @@ static void UserInterfaceTask(void *param) {
     }
 }
 
+void AlarmTask(void* param) {
+    AlarmTaskContext* alarmCtx = static_cast<AlarmTaskContext*>(param);
+    GPIOControl* gpioControl = &alarmCtx->gpioControl;
+    Alarm* alarm = alarmCtx->alarm;
+    QueueHandle_t q = alarm->GetEventQueue();
+
+    while (true) {
+        AlarmEvent alarmEvent;
+        if (xQueueReceive(q, &alarmEvent, portMAX_DELAY)) {
+            switch (alarmEvent.type) {
+                case AlarmEventType::AlarmOn:
+                    gpioControl->AlarmOn();
+                    break;
+
+                case AlarmEventType::AlarmOff:
+                    gpioControl->AlarmOff();
+                    break;
+            }
+        }
+    }
+}
+
 void ClockDisplayTask(void* param) {
     ClockTaskContext* uiCtx = static_cast<ClockTaskContext*>(param);
     GPIOControl* gpioControl = &uiCtx->gpioControl;
     QueueHandle_t q = uiCtx->clockQueue;
     MenuController* menu = uiCtx->menu;
     IDisplay* lcd = uiCtx->display;
+    Alarm* alarm = uiCtx->alarm;
     Clock* clock = uiCtx->clock;
 
     char line0[32];
@@ -83,102 +113,109 @@ void ClockDisplayTask(void* param) {
                 // This allows the menu to take precedence over clock updates
                 continue;
             }
+            
+            if (clockEvent.type != ClockEventType::Tick) {
+                // Ignore non-tick events
+                continue;
+            }
 
             // Process the clock event
-            switch (clockEvent.type) {
-                case ClockEventType::Tick:
-                    {
-                        gpioControl->BlinkTickLed();
-                        int seconds;
-                        bool enabled;
-                        DateTime alarmTime;
-                        clock->GetAlarmDuty(enabled);
-                        clock->GetAlarmLength(seconds);
-                        clock->GetAlarmTime(alarmTime);
+            {
+                gpioControl->BlinkTickLed();
+                alarm->ProcessCurrentTime(clockEvent.currentTime);
 
-                        snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
-                                clockEvent.currentTime.year, clockEvent.currentTime.month, clockEvent.currentTime.day);
-                        snprintf(line1, sizeof(line1), "%02d:%02d:%02d",
-                                clockEvent.currentTime.hour, clockEvent.currentTime.minute, clockEvent.currentTime.second);
+                int seconds;
+                bool enabled;
+                DateTime alarmTime;
+                alarm->GetAlarmDuty(enabled);
+                alarm->GetAlarmLength(seconds);
+                alarm->GetAlarmTime(alarmTime);
+                alarm->GetAlarmStatus(alarmIsOn);
 
-                        snprintf(line3, sizeof(line3), "%02d sec at %02d:%02d %s", 
-                                seconds, alarmTime.hour, alarmTime.minute, 
-                                enabled ? "On" : "Off");
-                        
-                        // Draw the bell symbol at the start of the line
-                        lcd->PrintCustomCharacter(3, 0, enabled && alarmIsOn ? 0x00 : 0x01);
+                snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
+                        clockEvent.currentTime.year, clockEvent.currentTime.month, clockEvent.currentTime.day);
+                snprintf(line1, sizeof(line1), "%02d:%02d:%02d",
+                        clockEvent.currentTime.hour, clockEvent.currentTime.minute, clockEvent.currentTime.second);
 
-                        lcd->ShowText(0, 0, line0);
-                        lcd->ShowText(0, 11, line1);
-                        // lcd->ShowText(2, 2, line2);
-                        lcd->ShowText(3, 1, line3);
-                    }
-                    break;
+                snprintf(line3, sizeof(line3), "%02d sec at %02d:%02d %s", 
+                        seconds, alarmTime.hour, alarmTime.minute, 
+                        enabled ? "On" : "Off");
+                
+                // Draw the bell symbol at the start of the line
+                lcd->PrintCustomCharacter(3, 0, enabled && alarmIsOn ? 0x00 : 0x01);
 
-                case ClockEventType::AlarmOn:
-                    gpioControl->AlarmOn();
-                    alarmIsOn = true;
-                    break;
-
-                case ClockEventType::AlarmOff:
-                    gpioControl->AlarmOff();
-                    alarmIsOn = false;
-                    break;
+                lcd->ShowText(0, 0, line0);
+                lcd->ShowText(0, 11, line1);
+                // lcd->ShowText(2, 2, line2);
+                lcd->ShowText(3, 1, line3);
             }
         }
     }
 }
 
 int main() {
-  gpio_init(PICO_DEFAULT_LED_PIN);
-  gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+    gpio_init(PICO_DEFAULT_LED_PIN);
+    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 
 
-  HD44780 lcd(0x27); // This address is common for many I2C LCDs, but it may vary.
-  lcd.Init();
-  lcd.Clear();
+    HD44780 lcd(0x27); // This address is common for many I2C LCDs, but it may vary.
+    lcd.Init();
+    lcd.Clear();
 
-  Display display(&lcd);
-  display.Start();
+    Display display(&lcd);
+    display.Start();
 
-  GPIOControl gpioControl(PICO_DEFAULT_LED_PIN, 6);
+    GPIOControl gpioControl(PICO_DEFAULT_LED_PIN, 6);
 
-  static RotaryEncoder encoder(14, 15, 13);
-  encoder.Init();
+    static RotaryEncoder encoder(14, 15, 13);
+    encoder.Init();
 
-  // Create Clock instance
-  static Clock clock(4); // static so it persists
+    // Create Alarm instance
+    static Alarm alarm(4);
+    alarm.SetAlarmTime({0, 0, 0, 12, 0, 0});  // Alarm at 12:00
+    alarm.SetAlarmLength(10); // Alarm will ring for 10 seconds
+    alarm.SetAlarmDuty(true); // Enable the alarm
 
-  // Optional: initialize time and alarm
-  clock.SetCurrentTime({2025, 6, 19, 11, 59, 50});
-  clock.SetAlarmTime({0, 0, 0, 12, 0, 0});  // Alarm at 12:00
-  clock.SetAlarmDuty(true);
+    // Create Clock instance
+    static Clock clock(4); // static so it persists
 
-  static MenuController menu(&clock, &display);
+    // Optional: initialize time and alarm
+    clock.SetCurrentTime({2025, 6, 19, 11, 59, 50});
 
-  static UiTaskContext uiCtx = {
-    .encoderQueue = encoder.GetEventQueue(),
-    .display = &display,
-    .menu = &menu
-  };
+    static MenuController menu(&clock, &alarm, &display);
 
-  static ClockTaskContext clockCtx = {
-    .clockQueue = clock.GetEventQueue(),
-    .gpioControl = gpioControl,
-    .menu = &menu,
-    .display = &display,
-    .clock = &clock
-  };
+    static UiTaskContext uiCtx = {
+        .encoderQueue = encoder.GetEventQueue(),
+        .display = &display,
+        .menu = &menu
+    };
 
-  // Start Encoder task
-  xTaskCreate(UserInterfaceTask, "UserInterface", 512, &uiCtx, 1, nullptr);
+    AlarmTaskContext alarmCtx = {
+        .gpioControl = gpioControl,
+        .alarm = &alarm
+    };
 
-  // Start Clock UI display task
-  xTaskCreate(ClockDisplayTask, "ClockDisplay", 1024, &clockCtx, 1, nullptr);
+    static ClockTaskContext clockCtx = {
+        .clockQueue = clock.GetEventQueue(),
+        .gpioControl = gpioControl,
+        .menu = &menu,
+        .display = &display,
+        .alarm = &alarm,
+        .clock = &clock
+    };
 
-  // Start the Clock
-  clock.Start();
+    // Start Encoder task
+    xTaskCreate(UserInterfaceTask, "UserInterface", 512, &uiCtx, 1, nullptr);
 
-  /* Start the tasks and timer running. */
-  vTaskStartScheduler();
+    // Start Clock UI display task
+    xTaskCreate(ClockDisplayTask, "ClockDisplay", 1024, &clockCtx, 1, nullptr);
+
+    // Start Alarm task
+    xTaskCreate(AlarmTask, "AlarmTask", 512, &alarmCtx, 1, nullptr);
+
+    // Start the Clock
+    clock.Start();
+
+    /* Start the tasks and timer running. */
+    vTaskStartScheduler();
 }

@@ -34,6 +34,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/FreeRTOSKernelPort/FreeRTOS_Kernel_import.cma
 add_executable(${NAME}
         ./App/main.cpp
         ./Clock/Clock.cpp
+        ./Clock/Alarm.cpp
         ./Display/Display.cpp
         ./Drivers/HD44780.cpp
         ./Drivers/GPIOControl.cpp
