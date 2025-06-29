@@ -20,8 +20,8 @@ struct UiTaskContext {
 };
 
 struct ClockTaskContext {
-    QueueHandle_t clockQueue;
-    GPIOControl gpioControl;
+    QueueHandle_t queue;
+    GPIOControl gpio;
     MenuController* menu;
     IDisplay* display;
     Alarm* alarm;
@@ -29,7 +29,7 @@ struct ClockTaskContext {
 };
 
 struct AlarmTaskContext {
-    GPIOControl gpioControl;
+    GPIOControl gpio;
     Alarm* alarm;
 };
 
@@ -68,7 +68,7 @@ static void UserInterfaceTask(void *param) {
 
 void AlarmTask(void* param) {
     AlarmTaskContext* alarmCtx = static_cast<AlarmTaskContext*>(param);
-    GPIOControl* gpioControl = &alarmCtx->gpioControl;
+    GPIOControl* gpio = &alarmCtx->gpio;
     Alarm* alarm = alarmCtx->alarm;
     QueueHandle_t q = alarm->GetEventQueue();
 
@@ -77,11 +77,11 @@ void AlarmTask(void* param) {
         if (xQueueReceive(q, &alarmEvent, portMAX_DELAY)) {
             switch (alarmEvent.type) {
                 case AlarmEventType::AlarmOn:
-                    gpioControl->AlarmOn();
+                    gpio->AlarmOn();
                     break;
 
                 case AlarmEventType::AlarmOff:
-                    gpioControl->AlarmOff();
+                    gpio->AlarmOff();
                     break;
             }
         }
@@ -90,8 +90,8 @@ void AlarmTask(void* param) {
 
 void ClockDisplayTask(void* param) {
     ClockTaskContext* uiCtx = static_cast<ClockTaskContext*>(param);
-    GPIOControl* gpioControl = &uiCtx->gpioControl;
-    QueueHandle_t q = uiCtx->clockQueue;
+    GPIOControl* gpio = &uiCtx->gpio;
+    QueueHandle_t q = uiCtx->queue;
     MenuController* menu = uiCtx->menu;
     IDisplay* lcd = uiCtx->display;
     Alarm* alarm = uiCtx->alarm;
@@ -121,7 +121,7 @@ void ClockDisplayTask(void* param) {
 
             // Process the clock event
             {
-                gpioControl->BlinkTickLed();
+                gpio->BlinkTickLed();
                 alarm->ProcessCurrentTime(clockEvent.currentTime);
 
                 int seconds;
@@ -165,7 +165,7 @@ int main() {
     Display display(&lcd);
     display.Start();
 
-    GPIOControl gpioControl(PICO_DEFAULT_LED_PIN, 6);
+    GPIOControl gpio(PICO_DEFAULT_LED_PIN, 6);
 
     static RotaryEncoder encoder(14, 15, 13);
     encoder.Init();
@@ -191,13 +191,13 @@ int main() {
     };
 
     AlarmTaskContext alarmCtx = {
-        .gpioControl = gpioControl,
+        .gpio = gpio,
         .alarm = &alarm
     };
 
     static ClockTaskContext clockCtx = {
-        .clockQueue = clock.GetEventQueue(),
-        .gpioControl = gpioControl,
+        .queue = clock.GetEventQueue(),
+        .gpio = gpio,
         .menu = &menu,
         .display = &display,
         .alarm = &alarm,
