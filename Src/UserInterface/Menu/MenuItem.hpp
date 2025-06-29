@@ -16,13 +16,15 @@ enum class MenuItemType {
 class MenuItem
 {
 public:
-        MenuItem(int index, MenuItemType type, const char* name)
-            : index(index), type(type), name(name) {}
+        MenuItem(int index, MenuItemType type, const char* name, const char* header)
+            : index(index), type(type), name(name), header(header) {}
 
         bool IsTypeOf(MenuItemType itemType) const {
             return type == itemType;
         }
+
         const char* GetName() const { return name; }
+        const char* GetHeader() const { return header; }
 
         bool TypeOf(MenuItemType itemType) const {
             return type == itemType;
@@ -52,6 +54,7 @@ public:
     private:
         MenuItemType type;
         const char* name;
+        const char* header;
         const int index;
         IPage *page = nullptr;
 };

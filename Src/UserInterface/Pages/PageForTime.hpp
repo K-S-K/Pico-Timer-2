@@ -14,19 +14,19 @@ enum class PageForTimeMode {
 class PageForTime : public EmptyPage
 {
     public:
-    PageForTime(IDisplay* display, int row, int col, DateTime valueIn, PageForTimeMode mode = PageForTimeMode::WithSeconds)
-    : EmptyPage(display, row, col), mode(mode)
+    PageForTime(IDisplay* display, int row, int col, DateTime valueIn, const char* headerText, PageForTimeMode mode = PageForTimeMode::WithSeconds)
+    : EmptyPage(display, row, col, headerText), mode(mode)
     {
         currentValue.CopyFrom(valueIn);
 
         elements = new InputElement*[5]; // 3 editable fields + Cancel/Apply
         int i = 0;
         elements[i++] = new InputElement(display, 3, 0, InputElementType::Cancel);
-        elements[i++] = new InputElement(display, row + 1, col + 3, InputElementType::Data, &PageForTime::AlterHourThunk, this);
-        elements[i++] = new InputElement(display, row + 1, col + 6, InputElementType::Data, &PageForTime::AlterMinuteThunk, this);
+        elements[i++] = new InputElement(display, row + 1, col + 1, InputElementType::Data, &PageForTime::AlterHourThunk, this);
+        elements[i++] = new InputElement(display, row + 1, col + 4, InputElementType::Data, &PageForTime::AlterMinuteThunk, this);
         if (mode == PageForTimeMode::WithSeconds)
         {
-            elements[i++] = new InputElement(display, row + 1, col + 9, InputElementType::Data, &PageForTime::AlterSecondThunk, this);
+            elements[i++] = new InputElement(display, row + 1, col + 7, InputElementType::Data, &PageForTime::AlterSecondThunk, this);
         }
         elements[i++] = new InputElement(display, 3, 0, InputElementType::Apply);
 
@@ -43,15 +43,16 @@ class PageForTime : public EmptyPage
         switch (mode)
         {
             case PageForTimeMode::WithSeconds:
-                snprintf(buffer, sizeof(buffer), ": %02d:%02d:%02d", currentValue.hour, currentValue.minute, currentValue.second);
+                snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d", currentValue.hour, currentValue.minute, currentValue.second);
                 break;
 
             case PageForTimeMode::WithoutSeconds:
-                snprintf(buffer, sizeof(buffer), ": %02d:%02d", currentValue.hour, currentValue.minute);
+                snprintf(buffer, sizeof(buffer), "%02d:%02d", currentValue.hour, currentValue.minute);
                 break;
 
             default:
-                snprintf(buffer, sizeof(buffer), ": Unknown Mode");
+                // Handle not implemented mode gracefully
+                snprintf(buffer, sizeof(buffer), "! Unknown Mode !");
                 break;
         }
         display->ShowText(row, col, buffer);

@@ -10,8 +10,8 @@
 class EmptyPage: public IPage
 {
 public:
-EmptyPage(IDisplay* display, int row, int col)
-    : display(display), row(row), col(col) {}
+EmptyPage(IDisplay* display, int row, int col, const char* headerText)
+    : display(display), row(row), col(col), headerText(headerText) {}
 
     virtual ~EmptyPage()
     {
@@ -19,6 +19,12 @@ EmptyPage(IDisplay* display, int row, int col)
             delete elements[i];
         }
         delete[] elements;
+    }
+
+    void PrepareDisplay()
+    {
+        display->Clear();
+        display->ShowText(0, 0, headerText);
     }
 
     virtual void Render() = 0;
@@ -99,4 +105,5 @@ protected:
 
 private:
     int CurrentElementIndex = 0;
+    const char* headerText;
 };

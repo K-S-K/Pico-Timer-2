@@ -16,12 +16,12 @@ MenuController::MenuController(Clock* clock, IDisplay* display)
         // Initialize menu items
         menuItems = new MenuItem[6]
         {
-            MenuItem(0, MenuItemType::Date, "Date"),
-            MenuItem(1, MenuItemType::Time, "Time"),
-            MenuItem(2, MenuItemType::Alarm, "Alarm"),
-            MenuItem(3, MenuItemType::Relay, "Relay"),
-            MenuItem(4, MenuItemType::System, "System"),
-            MenuItem(5, MenuItemType::Exit, "Exit")
+            MenuItem(0, MenuItemType::Date, "Clock Date", "Set Clock Date"),
+            MenuItem(1, MenuItemType::Time, "Clock Time", "Set Clock Time"),
+            MenuItem(2, MenuItemType::Alarm, "Alarm Time", "Set Alarm Time"),
+            MenuItem(3, MenuItemType::Relay, "Relay", "Set Relay Time"),
+            MenuItem(4, MenuItemType::System, "System", "Configure System"),
+            MenuItem(5, MenuItemType::Exit, "Exit", "Exit Menu")
         };
 
         // Initialize the current menu item 
@@ -87,9 +87,10 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         {
                             DateTime value;
                             clock->GetCurrentTime(value);
-                            page = new PageForDate(display, 1, 6, value);
+                            page = new PageForDate(display, 1, 4, value, currentItem->GetHeader());
                             currentItem->SetPage(page);
                         }
+                        page->PrepareDisplay();
                         page->Render();
                     }
 
@@ -99,9 +100,10 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         {
                             DateTime value;
                             clock->GetCurrentTime(value);
-                            page = new PageForTime(display, 1, 6, value);
+                            page = new PageForTime(display, 1, 4, value, currentItem->GetHeader());
                             currentItem->SetPage(page);
                         }
+                        page->PrepareDisplay();
                         page->Render();
                     }
 
@@ -111,9 +113,10 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         {
                             DateTime value;
                             clock->GetAlarmTime(value);
-                            page = new PageForTime(display, 1, 7, value, PageForTimeMode::WithoutSeconds);
+                            page = new PageForTime(display, 1, 4, value, currentItem->GetHeader(), PageForTimeMode::WithoutSeconds);
                             currentItem->SetPage(page);
                         }
+                        page->PrepareDisplay();
                         page->Render();
                     }
 
@@ -228,46 +231,27 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
 }
 
 void MenuController::Render() {
-    // If we are in the main screen, we do not render anything
-    // This is to avoid flickering and unnecessary updates
-    if(menuState == MenuState::MainScreen)
-    {
-        return;
-    }
-
-    char buf[21];
-    
-    // Fill with spaces
-    snprintf(buf, sizeof(buf), "                    ");
-
-    // Clear screen first
-    display->ShowText(0, 0, buf);
-    display->ShowText(1, 0, buf);
 
     switch (menuState) {
         case MenuState::MainScreen: {
-            // Display the main screen status for the debugging purpose only
-            // display->ShowText(0, 0, "Main Screen");
             break;
         }
 
         case MenuState::MenuScreen: {
-            display->ShowText(0, 0, "Menu:");
-            display->ShowText(1, 2, currentItem->GetName());
+            display->ShowText(0, 0, "Menu");
+            char buffer[21];
+            snprintf(buffer, sizeof(buffer), "  -> %-15s", currentItem->GetName());
+            display->ShowText(1, 0, buffer);
             break;
         }
 
         case MenuState::EditScreen: {
-            display->ShowText(0, 0, "Edit:");
-            display->ShowText(1, 2, currentItem->GetName());
-
             {
                 IPage *page = currentItem->GetPage();
                 if(page != nullptr){
                     page->Render();
                 }
             }
-
             break;
         }
     }
