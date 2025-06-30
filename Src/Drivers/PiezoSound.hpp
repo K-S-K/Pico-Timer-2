@@ -12,9 +12,15 @@
 
 enum class SoundCommand {
     Sweep,
+    Hatikvah,
     MenuBeep,
     AlarmStart,
-    HourlyCuckoo
+    HourlyCuckoo,
+};
+
+struct MelodyNote {
+    uint16_t frequency; // 0 = pause
+    uint16_t duration_ms;
 };
 
 class PiezoSound {
@@ -34,6 +40,9 @@ public:
     void PlayHourlyCuckoo() {
         EnqueeCommand(SoundCommand::HourlyCuckoo);
     }
+    void PlayHatikvah() {
+        EnqueeCommand(SoundCommand::Hatikvah);
+    }
 
 private:
     void EnqueeCommand(SoundCommand command);
@@ -41,6 +50,7 @@ private:
 
     void PlayTone(uint frequency, uint duration_ms);
     void PlaySequence(SoundCommand command);
+    void PlayMelody(const MelodyNote* notes, size_t length);
 
     QueueHandle_t queue;
     uint8_t pin;

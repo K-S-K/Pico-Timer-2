@@ -81,10 +81,11 @@ void AlarmTask(void* param) {
             switch (alarmEvent.type) {
                 case AlarmEventType::AlarmOn:
                     gpio->AlarmOn();
-                    // sound->PlayAlarmStart(); // Play alarm sound
+                    sound->PlayAlarmStart(); // Play alarm sound
                     // sound->PlayHourlyCuckoo(); // Play hourly cuckoo sound
-                    sound->PlaySweep(); // Play a sweep sound
-
+                    // sound->PlaySweep(); // Play a sweep sound
+                    // sound->PlayMenuBeep(); // Play a menu beep sound
+                    // sound->PlayHatikvah(); // Play Hatikvah melody
                     break;
 
                 case AlarmEventType::AlarmOff:
@@ -189,7 +190,7 @@ int main() {
     static Clock clock(4); // static so it persists
 
     // Optional: initialize time and alarm
-    clock.SetCurrentTime({2025, 6, 19, 11, 59, 50});
+    clock.SetCurrentTime({2025, 6, 19, 11, 59, 55});
 
     static MenuController menu(&clock, &alarm, &display);
 

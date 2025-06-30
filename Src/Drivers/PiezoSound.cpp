@@ -14,6 +14,38 @@
 
 #include "PiezoSound.hpp"
 
+#define NOTE_C4  262
+#define NOTE_D4  294
+#define NOTE_E4  330
+#define NOTE_F4  349
+#define NOTE_G4  392
+#define NOTE_A4  440
+#define NOTE_B4  494
+#define NOTE_C5  523
+#define NOTE_G5  784
+
+
+static const MelodyNote cuckooMelody[] = {
+    { 784, 300 }, // G5
+    {   0, 100 },
+    { 784, 300 }, // G5
+    {   0, 100 }
+};
+
+static const MelodyNote hatikvahEnding[] = {
+    { NOTE_E4, 250 },
+    { NOTE_G4, 500 },
+    { NOTE_F4, 250 },
+    { NOTE_F4, 250 },
+    { NOTE_E4, 500 },
+    { NOTE_E4, 250 },
+    { NOTE_E4, 250 },
+    { NOTE_F4, 250 },
+    { NOTE_F4, 250 },
+    { NOTE_F4, 250 },
+    { NOTE_G4, 250 },
+    { NOTE_C4, 750 }
+};
 
 PiezoSound::PiezoSound(uint8_t pin) : pin(pin)
 {
@@ -85,9 +117,11 @@ void PiezoSound::PlaySequence(SoundCommand command) {
             break;
 
         case SoundCommand::HourlyCuckoo:
-            PlayTone(800, 200);
-            vTaskDelay(pdMS_TO_TICKS(50));
-            PlayTone(600, 200);
+            PlayMelody(cuckooMelody, sizeof(cuckooMelody) / sizeof(MelodyNote));
+            break;
+
+        case SoundCommand::Hatikvah:
+            PlayMelody(hatikvahEnding, sizeof(hatikvahEnding) / sizeof(MelodyNote));
             break;
 
         case SoundCommand::Sweep:
@@ -104,5 +138,24 @@ void PiezoSound::PlaySequence(SoundCommand command) {
                 }
             }
             break;
+    }
+}
+
+void PiezoSound::PlayMelody(const MelodyNote* notes, size_t length)
+{
+    for (size_t i = 0; i < length; ++i)
+    {
+        if (notes[i].frequency > 0)
+        {
+            PlayTone(notes[i].frequency, notes[i].duration_ms);
+        }
+        else
+        {
+            // Pause
+            vTaskDelay(pdMS_TO_TICKS(notes[i].duration_ms));
+        }
+
+        // Optional: small pause between notes
+        vTaskDelay(pdMS_TO_TICKS(20));
     }
 }
