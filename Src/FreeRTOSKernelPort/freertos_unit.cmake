@@ -15,5 +15,6 @@ target_compile_definitions(freertos_unit PUBLIC
 target_link_libraries(freertos_unit
 	FreeRTOS-Kernel
 	hardware_i2c
+	hardware_pwm
 	pico_stdlib
 	)

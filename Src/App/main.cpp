@@ -8,6 +8,7 @@
 #include "../Drivers/HD44780.hpp"
 #include "../Display/Display.hpp"
 #include "../Display/IDisplay.hpp"
+#include "../Drivers/PiezoSound.hpp"
 #include "../Drivers/GPIOControl.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 #include "../UserInterface/Menu/MenuController.hpp"
@@ -29,6 +30,7 @@ struct ClockTaskContext {
 };
 
 struct AlarmTaskContext {
+    PiezoSound sound;
     GPIOControl gpio;
     Alarm* alarm;
 };
@@ -70,6 +72,7 @@ void AlarmTask(void* param) {
     AlarmTaskContext* alarmCtx = static_cast<AlarmTaskContext*>(param);
     GPIOControl* gpio = &alarmCtx->gpio;
     Alarm* alarm = alarmCtx->alarm;
+    PiezoSound* sound = &alarmCtx->sound;
     QueueHandle_t q = alarm->GetEventQueue();
 
     while (true) {
@@ -78,6 +81,11 @@ void AlarmTask(void* param) {
             switch (alarmEvent.type) {
                 case AlarmEventType::AlarmOn:
                     gpio->AlarmOn();
+                    sound->PlayAlarmStart(); // Play alarm sound
+                    // sound->PlayHourlyCuckoo(); // Play hourly cuckoo sound
+                    // sound->PlaySweep(); // Play a sweep sound
+                    // sound->PlayMenuBeep(); // Play a menu beep sound
+                    // sound->PlayHatikvah(); // Play Hatikvah melody
                     break;
 
                 case AlarmEventType::AlarmOff:
@@ -165,10 +173,12 @@ int main() {
     Display display(&lcd);
     display.Start();
 
-    GPIOControl gpio(PICO_DEFAULT_LED_PIN, 6);
-
     static RotaryEncoder encoder(14, 15, 13);
     encoder.Init();
+
+    PiezoSound sound(8);
+
+    GPIOControl gpio(PICO_DEFAULT_LED_PIN, 6);
 
     // Create Alarm instance
     static Alarm alarm(4);
@@ -180,7 +190,7 @@ int main() {
     static Clock clock(4); // static so it persists
 
     // Optional: initialize time and alarm
-    clock.SetCurrentTime({2025, 6, 19, 11, 59, 50});
+    clock.SetCurrentTime({2025, 6, 19, 11, 59, 55});
 
     static MenuController menu(&clock, &alarm, &display);
 
@@ -191,8 +201,9 @@ int main() {
     };
 
     AlarmTaskContext alarmCtx = {
+        .sound = sound,
         .gpio = gpio,
-        .alarm = &alarm
+        .alarm = &alarm,
     };
 
     static ClockTaskContext clockCtx = {
