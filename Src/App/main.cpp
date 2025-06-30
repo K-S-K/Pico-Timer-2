@@ -10,6 +10,7 @@
 #include "../Display/IDisplay.hpp"
 #include "../Drivers/PiezoSound.hpp"
 #include "../Drivers/GPIOControl.hpp"
+#include "../Drivers/SystemThermo.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 #include "../UserInterface/Menu/MenuController.hpp"
 
@@ -24,6 +25,7 @@ struct ClockTaskContext {
     QueueHandle_t queue;
     GPIOControl gpio;
     MenuController* menu;
+    SystemThermo* thermo;
     IDisplay* display;
     Alarm* alarm;
     Clock* clock;
@@ -81,10 +83,10 @@ void AlarmTask(void* param) {
             switch (alarmEvent.type) {
                 case AlarmEventType::AlarmOn:
                     gpio->AlarmOn();
-                    sound->PlayAlarmStart(); // Play alarm sound
+                    // sound->PlayAlarmStart(); // Play alarm sound
                     // sound->PlayHourlyCuckoo(); // Play hourly cuckoo sound
                     // sound->PlaySweep(); // Play a sweep sound
-                    // sound->PlayMenuBeep(); // Play a menu beep sound
+                    sound->PlayMenuBeep(); // Play a menu beep sound
                     // sound->PlayHatikvah(); // Play Hatikvah melody
                     break;
 
@@ -101,14 +103,16 @@ void ClockDisplayTask(void* param) {
     GPIOControl* gpio = &uiCtx->gpio;
     QueueHandle_t q = uiCtx->queue;
     MenuController* menu = uiCtx->menu;
+    SystemThermo* thermo = uiCtx->thermo;
     IDisplay* lcd = uiCtx->display;
     Alarm* alarm = uiCtx->alarm;
     Clock* clock = uiCtx->clock;
 
-    char line0[32];
-    char line1[32];
-    // char line2[32];
-    char line3[32];
+    char line0[21];
+    char line1[21];
+    char line2[21];
+    char line3[21];
+    char line4[21];
     bool alarmIsOn = false;
 
     while (true) {
@@ -140,22 +144,35 @@ void ClockDisplayTask(void* param) {
                 alarm->GetAlarmTime(alarmTime);
                 alarm->GetAlarmStatus(alarmIsOn);
 
+                // Format the time and date strings
                 snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
                         clockEvent.currentTime.year, clockEvent.currentTime.month, clockEvent.currentTime.day);
                 snprintf(line1, sizeof(line1), "%02d:%02d:%02d",
                         clockEvent.currentTime.hour, clockEvent.currentTime.minute, clockEvent.currentTime.second);
 
-                snprintf(line3, sizeof(line3), "%02d sec at %02d:%02d %s", 
+                // Format the temperature reading
+                float temperature = thermo->GetLastReadenTemperature();
+                snprintf(line2, sizeof(line2), "Temperature: %.1f", temperature);
+
+                // Format the alarm information
+                snprintf(line4, sizeof(line4), "%02d sec at %02d:%02d %s", 
                         seconds, alarmTime.hour, alarmTime.minute, 
                         enabled ? "On" : "Off");
                 
                 // Draw the bell symbol at the start of the line
                 lcd->PrintCustomCharacter(3, 0, enabled && alarmIsOn ? 0x00 : 0x01);
+                // Draw the clock and thermo symbols
+                lcd->PrintCustomCharacter(0, 0, 0x03); // Clock
+                lcd->PrintCustomCharacter(1, 0, 0x04); // Therm
+                // Print the degree symbol
+                lcd->PrintCustomCharacter(1, 18, 0x02); // Print degree symbol
 
-                lcd->ShowText(0, 0, line0);
-                lcd->ShowText(0, 11, line1);
-                // lcd->ShowText(2, 2, line2);
-                lcd->ShowText(3, 1, line3);
+                // Show the formatted text on the LCD
+                lcd->ShowText(0, 1, line0);
+                lcd->ShowText(0, 12, line1);
+                lcd->ShowText(1, 1, line2);
+                lcd->ShowText(1, 19, "C");
+                lcd->ShowText(3, 1, line4);
             }
         }
     }
@@ -192,6 +209,9 @@ int main() {
     // Optional: initialize time and alarm
     clock.SetCurrentTime({2025, 6, 19, 11, 59, 55});
 
+    SystemThermo thermo(0.01f, 2000, 4);
+    thermo.Start(); // Start the temperature reading task
+
     static MenuController menu(&clock, &alarm, &display);
 
     static UiTaskContext uiCtx = {
@@ -210,6 +230,7 @@ int main() {
         .queue = clock.GetEventQueue(),
         .gpio = gpio,
         .menu = &menu,
+        .thermo = &thermo,
         .display = &display,
         .alarm = &alarm,
         .clock = &clock
