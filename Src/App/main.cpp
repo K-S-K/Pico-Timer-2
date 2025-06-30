@@ -112,6 +112,7 @@ void ClockDisplayTask(void* param) {
     char line1[32];
     char line2[32];
     char line3[32];
+    char line4[32];
     bool alarmIsOn = false;
 
     while (true) {
@@ -150,18 +151,25 @@ void ClockDisplayTask(void* param) {
 
                 // Format the temperature reading
                 float temperature = thermo->GetLastReadenTemperature();
-                snprintf(line2, sizeof(line2), "Temperature: %.1f C", temperature);
+                snprintf(line2, sizeof(line2), "Temperature: %.1f", temperature);
 
-                snprintf(line3, sizeof(line3), "%02d sec at %02d:%02d %s", 
+                snprintf(line4, sizeof(line4), "%02d sec at %02d:%02d %s", 
                         seconds, alarmTime.hour, alarmTime.minute, 
                         enabled ? "On" : "Off");
                 
                 // Draw the bell symbol at the start of the line
                 lcd->PrintCustomCharacter(3, 0, enabled && alarmIsOn ? 0x00 : 0x01);
-                lcd->ShowText(0, 0, line0);
-                lcd->ShowText(0, 11, line1);
-                lcd->ShowText(2, 0, line2);
-                lcd->ShowText(3, 1, line3);
+                // Draw the clock and thermo symbols
+                lcd->PrintCustomCharacter(0, 0, 0x03); // Clock
+                lcd->PrintCustomCharacter(1, 0, 0x04); // Therm
+                // Print the degree symbol
+                lcd->PrintCustomCharacter(1, 18, 0x02); // Print degree symbol
+
+                lcd->ShowText(0, 1, line0);
+                lcd->ShowText(0, 12, line1);
+                lcd->ShowText(1, 1, line2);
+                lcd->ShowText(1, 19, "C");
+                lcd->ShowText(3, 1, line4);
             }
         }
     }

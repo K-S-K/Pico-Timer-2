@@ -54,9 +54,33 @@ Display::Display(HD44780* lcd)
         0b00000,
         0b00000
     };
+    uint8_t clockChar[8] =
+    {
+        0b00000,
+        0b01110,
+        0b10101,
+        0b10111,
+        0b10001,
+        0b01110,
+        0b00000,
+        0b00000
+    };
+    uint8_t thermoChar[8] =
+    {
+        0b00100,
+        0b01010,
+        0b01010,
+        0b01110,
+        0b01110,
+        0b11111,
+        0b11111,
+        0b01110
+    };
     physicalDisplay->CreateCustomCharacter(0, bellCharOn);
     physicalDisplay->CreateCustomCharacter(1, bellCharOff);
     physicalDisplay->CreateCustomCharacter(2, degreeChar);
+    physicalDisplay->CreateCustomCharacter(3, clockChar);
+    physicalDisplay->CreateCustomCharacter(4, thermoChar);
 }
 
 void Display::Start()
