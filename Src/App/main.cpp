@@ -83,10 +83,10 @@ void AlarmTask(void* param) {
             switch (alarmEvent.type) {
                 case AlarmEventType::AlarmOn:
                     gpio->AlarmOn();
-                    sound->PlayAlarmStart(); // Play alarm sound
+                    // sound->PlayAlarmStart(); // Play alarm sound
                     // sound->PlayHourlyCuckoo(); // Play hourly cuckoo sound
                     // sound->PlaySweep(); // Play a sweep sound
-                    // sound->PlayMenuBeep(); // Play a menu beep sound
+                    sound->PlayMenuBeep(); // Play a menu beep sound
                     // sound->PlayHatikvah(); // Play Hatikvah melody
                     break;
 
@@ -108,11 +108,11 @@ void ClockDisplayTask(void* param) {
     Alarm* alarm = uiCtx->alarm;
     Clock* clock = uiCtx->clock;
 
-    char line0[32];
-    char line1[32];
-    char line2[32];
-    char line3[32];
-    char line4[32];
+    char line0[21];
+    char line1[21];
+    char line2[21];
+    char line3[21];
+    char line4[21];
     bool alarmIsOn = false;
 
     while (true) {
@@ -144,6 +144,7 @@ void ClockDisplayTask(void* param) {
                 alarm->GetAlarmTime(alarmTime);
                 alarm->GetAlarmStatus(alarmIsOn);
 
+                // Format the time and date strings
                 snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
                         clockEvent.currentTime.year, clockEvent.currentTime.month, clockEvent.currentTime.day);
                 snprintf(line1, sizeof(line1), "%02d:%02d:%02d",
@@ -153,6 +154,7 @@ void ClockDisplayTask(void* param) {
                 float temperature = thermo->GetLastReadenTemperature();
                 snprintf(line2, sizeof(line2), "Temperature: %.1f", temperature);
 
+                // Format the alarm information
                 snprintf(line4, sizeof(line4), "%02d sec at %02d:%02d %s", 
                         seconds, alarmTime.hour, alarmTime.minute, 
                         enabled ? "On" : "Off");
@@ -165,6 +167,7 @@ void ClockDisplayTask(void* param) {
                 // Print the degree symbol
                 lcd->PrintCustomCharacter(1, 18, 0x02); // Print degree symbol
 
+                // Show the formatted text on the LCD
                 lcd->ShowText(0, 1, line0);
                 lcd->ShowText(0, 12, line1);
                 lcd->ShowText(1, 1, line2);
