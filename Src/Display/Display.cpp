@@ -43,8 +43,20 @@ Display::Display(HD44780* lcd)
         0b00011,
         0b00000
     };
+    uint8_t degreeChar[8] =
+    {
+        0b00110,
+        0b01001,
+        0b01001,
+        0b00110,
+        0b00000,
+        0b00000,
+        0b00000,
+        0b00000
+    };
     physicalDisplay->CreateCustomCharacter(0, bellCharOn);
     physicalDisplay->CreateCustomCharacter(1, bellCharOff);
+    physicalDisplay->CreateCustomCharacter(2, degreeChar);
 }
 
 void Display::Start()

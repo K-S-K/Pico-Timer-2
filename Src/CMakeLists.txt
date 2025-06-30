@@ -39,6 +39,7 @@ add_executable(${NAME}
         ./Drivers/HD44780.cpp
         ./Drivers/PiezoSound.cpp
         ./Drivers/GPIOControl.cpp
+        ./Drivers/SystemThermo.cpp
         ./Drivers/RotaryEncoder.cpp
         ./UserInterface/Menu/MenuController.cpp
         )
