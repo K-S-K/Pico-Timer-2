@@ -35,6 +35,7 @@ add_executable(${NAME}
         ./App/main.cpp
         ./Clock/Clock.cpp
         ./Clock/Alarm.cpp
+        ./Clock/Relay.cpp
         ./Display/Display.cpp
         ./Drivers/HD44780.cpp
         ./Drivers/PiezoSound.cpp
