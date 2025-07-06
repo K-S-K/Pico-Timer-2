@@ -151,7 +151,6 @@ void ClockDisplayTask(void* param) {
     char line2[21];
     char line3[21];
     char line4[21];
-    bool alarmIsOn = false;
 
     while (true) {
         ClockEvent clockEvent;
@@ -175,13 +174,10 @@ void ClockDisplayTask(void* param) {
                 alarm->ProcessCurrentTime(clockEvent.currentTime);
                 relay->ProcessCurrentTime(clockEvent.currentTime);
 
-                int alarmSeconds;
-                bool alarmEnabled;
-                DateTime alarmTime;
-                alarm->GetAlarmDuty(alarmEnabled);
-                alarm->GetAlarmLength(alarmSeconds);
-                alarm->GetAlarmTime(alarmTime);
-                alarm->GetAlarmStatus(alarmIsOn);
+                AlarmState alarmState;
+                AlarmConfig alarmConfig;
+                alarm->GetAlarmState(alarmState);
+                alarm->GetAlarmConfig(alarmConfig);
 
                 bool relayEnabled;
                 bool relayIsClosed;
@@ -207,11 +203,13 @@ void ClockDisplayTask(void* param) {
 
                 // Format the alarm information
                 snprintf(line4, sizeof(line4), "%02d sec at %02d:%02d %s", 
-                        alarmSeconds, alarmTime.hour, alarmTime.minute, 
-                        alarmEnabled ? "On" : "Off");
+                        alarmConfig.duration, 
+                        alarmConfig.timeBeg.hour, 
+                        alarmConfig.timeBeg.minute, 
+                        alarmConfig.enabled ? "On" : "Off");
                 
                 // Draw the bell symbol at the start of the line
-                lcd->PrintCustomCharacter(3, 0, alarmEnabled && alarmIsOn ? 0x00 : 0x01);
+                lcd->PrintCustomCharacter(3, 0, alarmConfig.enabled && alarmState.ringing ? 0x00 : 0x01);
                 // Draw the clock and thermo symbols
                 lcd->PrintCustomCharacter(0, 0, 0x03); // Clock
                 lcd->PrintCustomCharacter(1, 0, 0x04); // Therm
@@ -255,9 +253,15 @@ int main() {
 
     // Create Alarm instance
     static Alarm alarm(4);
-    alarm.SetAlarmTime({0, 0, 0, 12, 0, 0});  // Alarm at 12:00
-    alarm.SetAlarmLength(10); // Alarm will ring for 10 alarmSeconds
-    alarm.SetAlarmDuty(true); // Enable the alarm
+    {
+        AlarmConfig alarmConfig;
+        alarm.GetAlarmConfig(alarmConfig);
+
+        alarmConfig.timeBeg = {0, 0, 0, 12, 0, 0}; // Set default alarm time
+        alarmConfig.duration = 10; // Set default alarm length
+        alarmConfig.enabled = true; // Enable the alarm by default
+        alarm.SetAlarmConfig(alarmConfig);
+    }
 
     // Create Relay instance
     Relay relay(4);

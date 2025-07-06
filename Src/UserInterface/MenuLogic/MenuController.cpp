@@ -114,9 +114,9 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = currentItem->GetPage();
                         if(page == nullptr)
                         {
-                            DateTime value;
-                            alarm->GetAlarmTime(value);
-                            page = new PageForTime(display, 1, 4, value, currentItem->GetHeader(), PageForTimeMode::WithoutSeconds);
+                            AlarmConfig alarmConfig;
+                            alarm->GetAlarmConfig(alarmConfig);
+                            page = new PageForTime(display, 1, 4, alarmConfig.timeBeg, currentItem->GetHeader(), PageForTimeMode::WithoutSeconds);
                             currentItem->SetPage(page);
                         }
                         page->PrepareDisplay();
@@ -127,11 +127,9 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = currentItem->GetPage();
                         if(page == nullptr)
                         {
-                            int seconds;
-                            bool enabled;
-                            alarm->GetAlarmDuty(enabled);
-                            alarm->GetAlarmLength(seconds);
-                            page = new PageForAlrm(display, 1, 2, seconds, enabled, currentItem->GetHeader());
+                            AlarmConfig alarmConfig;
+                            alarm->GetAlarmConfig(alarmConfig);
+                            page = new PageForAlrm(display, 1, 2, alarmConfig.duration, alarmConfig.enabled, currentItem->GetHeader());
                             currentItem->SetPage(page);
                         }
                         page->PrepareDisplay();
@@ -233,14 +231,14 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             }
                             if(result == EventProcessingResult::Apply)
                             {
-                                    DateTime clockValue;
-                                    alarm->GetAlarmTime(clockValue);
+                                    AlarmConfig alarmConfig;
+                                    alarm->GetAlarmConfig(alarmConfig);
                                     DateTime editorValue;
                                     ((PageForTime*)(page))->GetCurrentTime(editorValue);
-                                    clockValue.CopyTimeFrom(editorValue);
+                                    alarmConfig.timeBeg.CopyTimeFrom(editorValue);
 
                                     // Apply the changes to the clock
-                                    alarm->SetAlarmTime(clockValue);
+                                    alarm->SetAlarmConfig(alarmConfig);
                             }
                             delete page;
                             page = nullptr;
@@ -264,9 +262,13 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             {
                                     bool enabled;
                                     int seconds;
+                                    AlarmConfig alarmConfig;
+                                    alarm->GetAlarmConfig(alarmConfig);
                                     ((PageForAlrm*)(page))->GetCurrentState(seconds, enabled);
-                                    alarm->SetAlarmDuty(enabled);
-                                    alarm->SetAlarmLength(seconds);
+                                    alarmConfig.duration = seconds;
+                                    alarmConfig.enabled = enabled;
+                                    // Apply the changes to the clock
+                                    alarm->SetAlarmConfig(alarmConfig);
                             }
                             delete page;
                             page = nullptr;
