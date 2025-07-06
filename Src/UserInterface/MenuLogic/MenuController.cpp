@@ -140,9 +140,9 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = currentItem->GetPage();
                         if(page == nullptr)
                         {
-                            DateTime timeOn, timeOff;
-                            relay->GetRelayTimes(timeOn, timeOff);
-                            page = new PageForRelay(display, 1, 2, timeOn, timeOff, currentItem->GetHeader());
+                            RelayConfig relayConfig;
+                            relay->GetRelayConfig(relayConfig);
+                            page = new PageForRelay(display, 1, 2, relayConfig.timeBeg, relayConfig.timeEnd, currentItem->GetHeader());
                             currentItem->SetPage(page);
                         }
                         page->PrepareDisplay();
@@ -290,9 +290,11 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             }
                             if(result == EventProcessingResult::Apply)
                             {
-                                    DateTime timeOn, timeOff;
-                                    ((PageForRelay*)(page))->GetRelayTimes(timeOn, timeOff);
-                                    relay->SetRelayTimes(timeOn, timeOff);
+                                    RelayConfig relayConfig;
+                                    relay->GetRelayConfig(relayConfig);
+                                    ((PageForRelay*)(page))->GetRelayTimes(relayConfig.timeBeg, relayConfig.timeEnd);
+                                    // Apply the changes to the clock
+                                    relay->SetRelayConfig(relayConfig);
                             }
                             delete page;
                             page = nullptr;

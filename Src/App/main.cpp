@@ -179,12 +179,10 @@ void ClockDisplayTask(void* param) {
                 alarm->GetAlarmState(alarmState);
                 alarm->GetAlarmConfig(alarmConfig);
 
-                bool relayEnabled;
-                bool relayIsClosed;
-                DateTime relayTimeBeg, relayTimeEnd;
-                relay->GetRelayDuty(relayEnabled);
-                relay->GetRelayStatus(relayIsClosed);
-                relay->GetRelayTimes(relayTimeBeg, relayTimeEnd);
+                RelayState relayState;
+                RelayConfig relayConfig;
+                relay->GetRelayState(relayState);
+                relay->GetRelayConfig(relayConfig);
 
                 // Format the time and date strings
                 snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
@@ -198,8 +196,8 @@ void ClockDisplayTask(void* param) {
 
                 // Format the Relay status string
                 snprintf(line3, sizeof(line3), "Relay: %02d:%02d-%02d:%02d",
-                        relayTimeBeg.hour, relayTimeBeg.minute, 
-                        relayTimeEnd.hour, relayTimeEnd.minute);
+                        relayConfig.timeBeg.hour, relayConfig.timeBeg.minute, 
+                        relayConfig.timeEnd.hour, relayConfig.timeEnd.minute);
 
                 // Format the alarm information
                 snprintf(line4, sizeof(line4), "%02d sec at %02d:%02d %s", 
@@ -217,7 +215,7 @@ void ClockDisplayTask(void* param) {
                 lcd->PrintCustomCharacter(1, 18, 0x02); // Print degree symbol
 
                 // Display relay status
-                lcd->PrintCustomCharacter(2, 0, relayIsClosed ? 0x07 : 0x06);
+                lcd->PrintCustomCharacter(2, 0, relayState.ringing ? 0x07 : 0x06);
 
                 // Show the formatted text on the LCD
                 lcd->ShowText(0, 1, line0);
@@ -256,7 +254,8 @@ int main() {
     {
         AlarmConfig alarmConfig;
         alarm.GetAlarmConfig(alarmConfig);
-
+        
+        // Set default alarm time and duration
         alarmConfig.timeBeg = {0, 0, 0, 12, 0, 0}; // Set default alarm time
         alarmConfig.duration = 10; // Set default alarm length
         alarmConfig.enabled = true; // Enable the alarm by default
@@ -265,10 +264,16 @@ int main() {
 
     // Create Relay instance
     Relay relay(4);
-    relay.SetRelayTimes({2025, 1, 1, 12, 0, 0}, {2025, 1, 1, 12, 1, 0}); // Relay from 07:00 to 19:00
-    // relay.SetRelayTimeBeg({2025, 1, 1, 7, 0, 0});  // Relay starts at 07:00
-    // relay.SetRelayTimeEnd({2025, 1, 1, 11, 0, 0}); // Relay ends at 19:00
-    relay.SetRelayDuty(true); // Enable the relay
+    {
+        RelayConfig relayConfig;
+        relay.GetRelayConfig(relayConfig);
+
+        // Set default relay times
+        relayConfig.timeBeg = {2025, 1, 1, 12, 0, 0}; // Start at 12:00
+        relayConfig.timeEnd = {2025, 1, 1, 12, 1, 0}; // End at 12:01
+        relayConfig.enabled = true; // Enable the relay by default
+        relay.SetRelayConfig(relayConfig);
+    }
 
     // Create Clock instance
     static Clock clock(4); // static so it persists
