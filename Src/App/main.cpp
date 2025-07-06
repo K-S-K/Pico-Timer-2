@@ -153,8 +153,7 @@ void ClockDisplayTask(void* param) {
                 DateTime relayTimeBeg, relayTimeEnd;
                 relay->GetRelayDuty(relayEnabled);
                 relay->GetRelayStatus(relayIsClosed);
-                relay->GetRelayTimeBeg(relayTimeBeg);
-                relay->GetRelayTimeEnd(relayTimeEnd);
+                relay->GetRelayTimes(relayTimeBeg, relayTimeEnd);
 
                 // Format the time and date strings
                 snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
@@ -226,8 +225,9 @@ int main() {
 
     // Create Relay instance
     Relay relay(4);
-    relay.SetRelayTimeBeg({2025, 1, 1, 7, 0, 0});  // Relay starts at 07:00
-    relay.SetRelayTimeEnd({2025, 1, 1, 11, 0, 0}); // Relay ends at 19:00
+    relay.SetRelayTimes({2025, 1, 1, 12, 0, 0}, {2025, 1, 1, 12, 1, 0}); // Relay from 07:00 to 19:00
+    // relay.SetRelayTimeBeg({2025, 1, 1, 7, 0, 0});  // Relay starts at 07:00
+    // relay.SetRelayTimeEnd({2025, 1, 1, 11, 0, 0}); // Relay ends at 19:00
     relay.SetRelayDuty(true); // Enable the relay
 
     // Create Clock instance
@@ -239,7 +239,7 @@ int main() {
     SystemThermo thermo(0.01f, 2000, 4);
     thermo.Start(); // Start the temperature reading task
 
-    static MenuController menu(&clock, &alarm, &display);
+    static MenuController menu(&clock, &alarm, &relay, &display);
 
     static UiTaskContext uiCtx = {
         .encoderQueue = encoder.GetEventQueue(),

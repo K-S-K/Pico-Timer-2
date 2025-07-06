@@ -33,16 +33,24 @@ void Relay::ProcessCurrentTime(const DateTime& time)
             RelayEvent evt{RelayEventType::RelayOff, time};
             xQueueSend(outQueue, &evt, 0);
         }
+
+        relayRinging = isRelayNow; // Update the ringing status
     }
 }
 
-void Relay::SetRelayTimeBeg(const DateTime& newTime) { relayTimeBeg = newTime; }
-void Relay::SetRelayTimeEnd(const DateTime& newTime) { relayTimeEnd = newTime; }
+void Relay::SetRelayTimes(const DateTime& timeBeg, const DateTime& timeEnd)
+{
+    relayTimeBeg.CopyFrom(timeBeg);
+    relayTimeEnd.CopyFrom(timeEnd);
+}
+void Relay::GetRelayTimes(DateTime& outTimeBeg, DateTime& outTimeEnd)
+{
+    outTimeBeg.CopyFrom(relayTimeBeg);
+    outTimeEnd.CopyFrom(relayTimeEnd);
+}
 void Relay::SetRelayDuty(bool enable) { relayEnabled = enable; }
-
-void Relay::GetRelayTimeBeg(DateTime& outTime) { outTime.CopyFrom(relayTimeBeg); }
-void Relay::GetRelayTimeEnd(DateTime& outTime) { outTime.CopyFrom(relayTimeEnd); }
 void Relay::GetRelayDuty(bool& outIsEnabled) { outIsEnabled = relayEnabled; }
+
 void Relay::GetRelayStatus(bool& outIsRinging) { outIsRinging = relayRinging; }
 
 QueueHandle_t Relay::GetEventQueue() const { return outQueue; }
@@ -51,6 +59,5 @@ bool Relay::IsRelayTime(const DateTime& currentTime) const
 {
     return
         relayTimeBeg.hour <= currentTime.hour && currentTime.hour <= relayTimeEnd.hour &&
-        relayTimeBeg.minute <= currentTime.minute && currentTime.minute <= relayTimeEnd.minute &&
-        relayTimeBeg.second <= currentTime.second && currentTime.second < relayTimeEnd.second;
+        relayTimeBeg.minute <= currentTime.minute && currentTime.minute <= relayTimeEnd.minute ;
 }

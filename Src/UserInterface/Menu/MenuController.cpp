@@ -9,9 +9,10 @@
 #include "../Pages/PageForDate.hpp"
 #include "../Pages/PageForTime.hpp"
 #include "../Pages/PageForAlrm.hpp"
+#include "../Pages/PageForRely.hpp"
 
-MenuController::MenuController(Clock* clock, Alarm* alarm, IDisplay* display)
-    : clock(clock), alarm(alarm), display(display) 
+MenuController::MenuController(Clock* clock, Alarm* alarm, Relay* relay, IDisplay* display)
+    : clock(clock), alarm(alarm), relay(relay), display(display)
     {
         count = static_cast<int>(MenuItemType::Count);
         // Initialize menu items
@@ -136,6 +137,19 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         page->PrepareDisplay();
                         page->Render();
                     }
+
+                    else if(currentItem->IsTypeOf(MenuItemType::Relay)){
+                        IPage *page = currentItem->GetPage();
+                        if(page == nullptr)
+                        {
+                            DateTime timeOn, timeOff;
+                            relay->GetRelayTimes(timeOn, timeOff);
+                            page = new PageForRelay(display, 1, 2, timeOn, timeOff, currentItem->GetHeader());
+                            currentItem->SetPage(page);
+                        }
+                        page->PrepareDisplay();
+                        page->Render();
+                    }
                     
                     // Add other page types here as needed
 
@@ -253,6 +267,30 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                                     ((PageForAlrm*)(page))->GetCurrentState(seconds, enabled);
                                     alarm->SetAlarmDuty(enabled);
                                     alarm->SetAlarmLength(seconds);
+                            }
+                            delete page;
+                            page = nullptr;
+                            currentItem->SetPage(nullptr);
+                            menuState = MenuState::MenuScreen;
+                            display->Clear();
+                        }
+                    }
+
+                    else if(currentItem->IsTypeOf(MenuItemType::Relay))
+                    {
+                        if(page != nullptr)
+                        {
+                            EventProcessingResult result = 
+                                page->ProcessMenuEvent(event);
+                            if(result == EventProcessingResult::Continue)
+                            {
+                                return; // Continue processing in the page
+                            }
+                            if(result == EventProcessingResult::Apply)
+                            {
+                                    DateTime timeOn, timeOff;
+                                    ((PageForRelay*)(page))->GetRelayTimes(timeOn, timeOff);
+                                    relay->SetRelayTimes(timeOn, timeOff);
                             }
                             delete page;
                             page = nullptr;

@@ -26,14 +26,12 @@ public:
 
     void ProcessCurrentTime(const DateTime& time);
 
-    void SetRelayTimeBeg(const DateTime& relayTimeBeg);
-    void SetRelayTimeEnd(const DateTime& relayTimeEnd);
-    void SetRelayLength(int seconds);
-    void SetRelayDuty(bool isActive);
+    void SetRelayTimes(const DateTime& timeBeg, const DateTime& timeEnd);
+    void GetRelayTimes(DateTime& outTimeBeg, DateTime& outTimeEnd);
 
-    void GetRelayTimeBeg(DateTime& outTime);
-    void GetRelayTimeEnd(DateTime& outTime);
+    void SetRelayDuty(bool isActive);
     void GetRelayDuty(bool& outIsEnabled);
+
     void GetRelayStatus(bool& outIsRinging);
 
     QueueHandle_t GetEventQueue() const;
