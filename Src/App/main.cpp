@@ -13,6 +13,8 @@
 #include "../Drivers/GPIOControl.hpp"
 #include "../Drivers/SystemThermo.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
+#include "../UserInterface/MainScreen.hpp"
+#include "../UserInterface/MenuLogic/MenuEvent.h"
 #include "../UserInterface/MenuLogic/MenuController.hpp"
 
 
@@ -25,6 +27,7 @@ struct UiTaskContext {
 struct ClockTaskContext {
     QueueHandle_t queue;
     GPIOControl gpio;
+    MainScreen* mainScreen;
     MenuController* menu;
     SystemThermo* thermo;
     IDisplay* display;
@@ -135,6 +138,7 @@ void ClockDisplayTask(void* param) {
     ClockTaskContext* uiCtx = static_cast<ClockTaskContext*>(param);
     GPIOControl* gpio = &uiCtx->gpio;
     QueueHandle_t q = uiCtx->queue;
+    MainScreen* mainScreen = uiCtx->mainScreen;
     MenuController* menu = uiCtx->menu;
     SystemThermo* thermo = uiCtx->thermo;
     IDisplay* lcd = uiCtx->display;
@@ -271,6 +275,8 @@ int main() {
     SystemThermo thermo(0.01f, 2000, 4);
     thermo.Start(); // Start the temperature reading task
 
+    MainScreen mainScreen(&display);
+
     static MenuController menu(&clock, &alarm, &relay, &display);
 
     static UiTaskContext uiCtx = {
@@ -294,6 +300,7 @@ int main() {
     static ClockTaskContext clockCtx = {
         .queue = clock.GetEventQueue(),
         .gpio = gpio,
+        .mainScreen = &mainScreen,
         .menu = &menu,
         .thermo = &thermo,
         .display = &display,

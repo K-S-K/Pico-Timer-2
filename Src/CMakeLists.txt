@@ -42,6 +42,7 @@ add_executable(${NAME}
         ./Drivers/GPIOControl.cpp
         ./Drivers/SystemThermo.cpp
         ./Drivers/RotaryEncoder.cpp
+        ./UserInterface/MainScreen.cpp
         ./UserInterface/MenuLogic/MenuController.cpp
         )
 
