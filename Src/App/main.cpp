@@ -5,6 +5,7 @@
 
 #include "../Clock/Clock.hpp"
 #include "../Clock/Alarm.hpp"
+#include "../Clock/Relay.hpp"
 #include "../Drivers/HD44780.hpp"
 #include "../Display/Display.hpp"
 #include "../Display/IDisplay.hpp"
@@ -27,6 +28,7 @@ struct ClockTaskContext {
     MenuController* menu;
     SystemThermo* thermo;
     IDisplay* display;
+    Relay* relay;
     Alarm* alarm;
     Clock* clock;
 };
@@ -35,6 +37,12 @@ struct AlarmTaskContext {
     PiezoSound sound;
     GPIOControl gpio;
     Alarm* alarm;
+};
+
+struct RelayTaskContext {
+    PiezoSound sound;
+    GPIOControl gpio;
+    Relay* relay;
 };
 
 static void UserInterfaceTask(void *param) {
@@ -98,6 +106,31 @@ void AlarmTask(void* param) {
     }
 }
 
+void RelayTask(void* param) {
+    RelayTaskContext* relayCtx = static_cast<RelayTaskContext*>(param);
+    GPIOControl* gpio = &relayCtx->gpio;
+    Relay* relay = relayCtx->relay;
+    PiezoSound* sound = &relayCtx->sound;
+    QueueHandle_t q = relay->GetEventQueue();
+
+    while (true) {
+        RelayEvent relayEvent;
+        if (xQueueReceive(q, &relayEvent, portMAX_DELAY)) {
+            switch (relayEvent.type) {
+                case RelayEventType::RelayOn:
+                    gpio->RelayOn();
+                    sound->PlayMenuBeep(); // Play a menu beep sound
+                    break;
+
+                case RelayEventType::RelayOff:
+                    gpio->RelayOff();
+                    sound->PlayMenuBeep(); // Play a menu beep sound
+                    break;
+            }
+        }
+    }
+}
+
 void ClockDisplayTask(void* param) {
     ClockTaskContext* uiCtx = static_cast<ClockTaskContext*>(param);
     GPIOControl* gpio = &uiCtx->gpio;
@@ -105,6 +138,7 @@ void ClockDisplayTask(void* param) {
     MenuController* menu = uiCtx->menu;
     SystemThermo* thermo = uiCtx->thermo;
     IDisplay* lcd = uiCtx->display;
+    Relay* relay = uiCtx->relay;
     Alarm* alarm = uiCtx->alarm;
     Clock* clock = uiCtx->clock;
 
@@ -135,14 +169,22 @@ void ClockDisplayTask(void* param) {
             {
                 gpio->BlinkTickLed();
                 alarm->ProcessCurrentTime(clockEvent.currentTime);
+                relay->ProcessCurrentTime(clockEvent.currentTime);
 
-                int seconds;
-                bool enabled;
+                int alarmSeconds;
+                bool alarmEnabled;
                 DateTime alarmTime;
-                alarm->GetAlarmDuty(enabled);
-                alarm->GetAlarmLength(seconds);
+                alarm->GetAlarmDuty(alarmEnabled);
+                alarm->GetAlarmLength(alarmSeconds);
                 alarm->GetAlarmTime(alarmTime);
                 alarm->GetAlarmStatus(alarmIsOn);
+
+                bool relayEnabled;
+                bool relayIsClosed;
+                DateTime relayTimeBeg, relayTimeEnd;
+                relay->GetRelayDuty(relayEnabled);
+                relay->GetRelayStatus(relayIsClosed);
+                relay->GetRelayTimes(relayTimeBeg, relayTimeEnd);
 
                 // Format the time and date strings
                 snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
@@ -154,24 +196,33 @@ void ClockDisplayTask(void* param) {
                 float temperature = thermo->GetLastReadenTemperature();
                 snprintf(line2, sizeof(line2), "Temperature: %.1f", temperature);
 
+                // Format the Relay status string
+                snprintf(line3, sizeof(line3), "Relay: %02d:%02d-%02d:%02d",
+                        relayTimeBeg.hour, relayTimeBeg.minute, 
+                        relayTimeEnd.hour, relayTimeEnd.minute);
+
                 // Format the alarm information
                 snprintf(line4, sizeof(line4), "%02d sec at %02d:%02d %s", 
-                        seconds, alarmTime.hour, alarmTime.minute, 
-                        enabled ? "On" : "Off");
+                        alarmSeconds, alarmTime.hour, alarmTime.minute, 
+                        alarmEnabled ? "On" : "Off");
                 
                 // Draw the bell symbol at the start of the line
-                lcd->PrintCustomCharacter(3, 0, enabled && alarmIsOn ? 0x00 : 0x01);
+                lcd->PrintCustomCharacter(3, 0, alarmEnabled && alarmIsOn ? 0x00 : 0x01);
                 // Draw the clock and thermo symbols
                 lcd->PrintCustomCharacter(0, 0, 0x03); // Clock
                 lcd->PrintCustomCharacter(1, 0, 0x04); // Therm
                 // Print the degree symbol
                 lcd->PrintCustomCharacter(1, 18, 0x02); // Print degree symbol
 
+                // Display relay status
+                lcd->PrintCustomCharacter(2, 0, relayIsClosed ? 0x07 : 0x06);
+
                 // Show the formatted text on the LCD
                 lcd->ShowText(0, 1, line0);
                 lcd->ShowText(0, 12, line1);
                 lcd->ShowText(1, 1, line2);
                 lcd->ShowText(1, 19, "C");
+                lcd->ShowText(2, 1, line3);
                 lcd->ShowText(3, 1, line4);
             }
         }
@@ -195,13 +246,21 @@ int main() {
 
     PiezoSound sound(8);
 
-    GPIOControl gpio(PICO_DEFAULT_LED_PIN, 6);
+    // LED pin, Alarm control pin, Relay control pin
+    GPIOControl gpio(PICO_DEFAULT_LED_PIN, 6, 9);
 
     // Create Alarm instance
     static Alarm alarm(4);
     alarm.SetAlarmTime({0, 0, 0, 12, 0, 0});  // Alarm at 12:00
-    alarm.SetAlarmLength(10); // Alarm will ring for 10 seconds
+    alarm.SetAlarmLength(10); // Alarm will ring for 10 alarmSeconds
     alarm.SetAlarmDuty(true); // Enable the alarm
+
+    // Create Relay instance
+    Relay relay(4);
+    relay.SetRelayTimes({2025, 1, 1, 12, 0, 0}, {2025, 1, 1, 12, 1, 0}); // Relay from 07:00 to 19:00
+    // relay.SetRelayTimeBeg({2025, 1, 1, 7, 0, 0});  // Relay starts at 07:00
+    // relay.SetRelayTimeEnd({2025, 1, 1, 11, 0, 0}); // Relay ends at 19:00
+    relay.SetRelayDuty(true); // Enable the relay
 
     // Create Clock instance
     static Clock clock(4); // static so it persists
@@ -212,7 +271,7 @@ int main() {
     SystemThermo thermo(0.01f, 2000, 4);
     thermo.Start(); // Start the temperature reading task
 
-    static MenuController menu(&clock, &alarm, &display);
+    static MenuController menu(&clock, &alarm, &relay, &display);
 
     static UiTaskContext uiCtx = {
         .encoderQueue = encoder.GetEventQueue(),
@@ -226,12 +285,19 @@ int main() {
         .alarm = &alarm,
     };
 
+    RelayTaskContext relayCtx = {
+        .sound = sound,
+        .gpio = gpio,
+        .relay = &relay
+    };
+
     static ClockTaskContext clockCtx = {
         .queue = clock.GetEventQueue(),
         .gpio = gpio,
         .menu = &menu,
         .thermo = &thermo,
         .display = &display,
+        .relay = &relay,
         .alarm = &alarm,
         .clock = &clock
     };
@@ -244,6 +310,9 @@ int main() {
 
     // Start Alarm task
     xTaskCreate(AlarmTask, "AlarmTask", 512, &alarmCtx, 1, nullptr);
+
+    // Start Relay task
+    xTaskCreate(RelayTask, "RelayTask", 512, &relayCtx, 1, nullptr);
 
     // Start the Clock
     clock.Start();

@@ -12,6 +12,8 @@
 enum class GPIOCommandType {
     SetAlarmOn,
     SetAlarmOff,
+    SetRelayOn,
+    SetRelayOff,
     BlinkClockTick,
 };
 
@@ -22,9 +24,11 @@ struct GPIOCommand {
 class GPIOControl
 {
 public:
-    GPIOControl(int pinTickLed, int pinAlrmLed);
-    void AlarmOn();
-    void AlarmOff();
+    GPIOControl(int pinTickLed, int pinAlrmCtrl, int pinRelayCtrl);
+    void AlarmOn() { EnqueeCommand(GPIOCommandType::SetAlarmOn); }
+    void AlarmOff() { EnqueeCommand(GPIOCommandType::SetAlarmOff); }
+    void RelayOn() { EnqueeCommand(GPIOCommandType::SetRelayOn); }
+    void RelayOff() { EnqueeCommand(GPIOCommandType::SetRelayOff); }
     void BlinkTickLed();
 
 private:
@@ -37,6 +41,7 @@ private:
 
 private:
     uint8_t pin_tick_led;
-    uint8_t pin_alrm_led;
+    uint8_t pin_alrm_ctrl;
+    uint8_t pin_relay_ctrl;
     QueueHandle_t commandQueue;
 };

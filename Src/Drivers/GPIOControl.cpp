@@ -11,26 +11,18 @@
 
 #include "GPIOControl.hpp"
 
-GPIOControl::GPIOControl(int pinTickLed, int pinAlrmLed)
+GPIOControl::GPIOControl(int pinTickLed, int pinAlrmCtrl, int pinRelayCtrl)
 {
     pin_tick_led = pinTickLed;
-    pin_alrm_led = pinAlrmLed;
+    pin_alrm_ctrl = pinAlrmCtrl;
+    pin_relay_ctrl = pinRelayCtrl;
 
-    PrepareGPIO(pin_alrm_led);
+    PrepareGPIO(pin_alrm_ctrl);
+    PrepareGPIO(pin_relay_ctrl);
 
     commandQueue = xQueueCreate(8, sizeof(GPIOCommand));
 
     Start();
-}
-
-void GPIOControl::AlarmOn()
-{
-    EnqueeCommand(GPIOCommandType::SetAlarmOn);
-}
-
-void GPIOControl::AlarmOff()
-{
-    EnqueeCommand(GPIOCommandType::SetAlarmOff);
 }
 
 void GPIOControl::BlinkTickLed()
@@ -90,11 +82,19 @@ void GPIOControl::ProcessCommand(const GPIOCommand& cmd)
     switch (cmd.type)
     {
         case GPIOCommandType::SetAlarmOn:
-            gpio_put(pin_alrm_led, 1);
+            gpio_put(pin_alrm_ctrl, 1);
+            break;
+
+        case GPIOCommandType::SetRelayOn:
+            gpio_put(pin_relay_ctrl, 1);
             break;
 
         case GPIOCommandType::SetAlarmOff:
-            gpio_put(pin_alrm_led, 0);
+            gpio_put(pin_alrm_ctrl, 0);
+            break;
+
+        case GPIOCommandType::SetRelayOff:
+            gpio_put(pin_relay_ctrl, 0);
             break;
 
         case GPIOCommandType::BlinkClockTick:
