@@ -42,7 +42,7 @@ add_executable(${NAME}
         ./Drivers/GPIOControl.cpp
         ./Drivers/SystemThermo.cpp
         ./Drivers/RotaryEncoder.cpp
-        ./UserInterface/Menu/MenuController.cpp
+        ./UserInterface/MenuLogic/MenuController.cpp
         )
 
 # Pull in our pico_stdlib which pulls in commonly used features

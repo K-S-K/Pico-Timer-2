@@ -13,7 +13,7 @@
 #include "../Drivers/GPIOControl.hpp"
 #include "../Drivers/SystemThermo.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
-#include "../UserInterface/Menu/MenuController.hpp"
+#include "../UserInterface/MenuLogic/MenuController.hpp"
 
 
 struct UiTaskContext {

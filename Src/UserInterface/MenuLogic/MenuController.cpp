@@ -5,11 +5,11 @@
 #include "../Display/Display.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 
-#include "../Pages/IPage.hpp"
-#include "../Pages/PageForDate.hpp"
-#include "../Pages/PageForTime.hpp"
-#include "../Pages/PageForAlrm.hpp"
-#include "../Pages/PageForRely.hpp"
+#include "../MenuPages/IPage.hpp"
+#include "../MenuPages/PageForDate.hpp"
+#include "../MenuPages/PageForTime.hpp"
+#include "../MenuPages/PageForAlrm.hpp"
+#include "../MenuPages/PageForRely.hpp"
 
 MenuController::MenuController(Clock* clock, Alarm* alarm, Relay* relay, IDisplay* display)
     : clock(clock), alarm(alarm), relay(relay), display(display)
