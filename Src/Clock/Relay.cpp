@@ -59,5 +59,5 @@ bool Relay::IsRelayTime(const DateTime& currentTime) const
 {
     return
         relayTimeBeg.hour <= currentTime.hour && currentTime.hour <= relayTimeEnd.hour &&
-        relayTimeBeg.minute <= currentTime.minute && currentTime.minute <= relayTimeEnd.minute ;
+        relayTimeBeg.minute <= currentTime.minute && currentTime.minute < relayTimeEnd.minute ;
 }

@@ -39,6 +39,12 @@ struct AlarmTaskContext {
     Alarm* alarm;
 };
 
+struct RelayTaskContext {
+    PiezoSound sound;
+    GPIOControl gpio;
+    Relay* relay;
+};
+
 static void UserInterfaceTask(void *param) {
     UiTaskContext* uiCtx = static_cast<UiTaskContext*>(param);
     QueueHandle_t q = uiCtx->encoderQueue;
@@ -94,6 +100,31 @@ void AlarmTask(void* param) {
 
                 case AlarmEventType::AlarmOff:
                     gpio->AlarmOff();
+                    break;
+            }
+        }
+    }
+}
+
+void RelayTask(void* param) {
+    RelayTaskContext* relayCtx = static_cast<RelayTaskContext*>(param);
+    GPIOControl* gpio = &relayCtx->gpio;
+    Relay* relay = relayCtx->relay;
+    PiezoSound* sound = &relayCtx->sound;
+    QueueHandle_t q = relay->GetEventQueue();
+
+    while (true) {
+        RelayEvent relayEvent;
+        if (xQueueReceive(q, &relayEvent, portMAX_DELAY)) {
+            switch (relayEvent.type) {
+                case RelayEventType::RelayOn:
+                    gpio->RelayOn();
+                    sound->PlayMenuBeep(); // Play a menu beep sound
+                    break;
+
+                case RelayEventType::RelayOff:
+                    gpio->RelayOff();
+                    sound->PlayMenuBeep(); // Play a menu beep sound
                     break;
             }
         }
@@ -215,7 +246,8 @@ int main() {
 
     PiezoSound sound(8);
 
-    GPIOControl gpio(PICO_DEFAULT_LED_PIN, 6);
+    // LED pin, Alarm control pin, Relay control pin
+    GPIOControl gpio(PICO_DEFAULT_LED_PIN, 6, 9);
 
     // Create Alarm instance
     static Alarm alarm(4);
@@ -253,6 +285,12 @@ int main() {
         .alarm = &alarm,
     };
 
+    RelayTaskContext relayCtx = {
+        .sound = sound,
+        .gpio = gpio,
+        .relay = &relay
+    };
+
     static ClockTaskContext clockCtx = {
         .queue = clock.GetEventQueue(),
         .gpio = gpio,
@@ -272,6 +310,9 @@ int main() {
 
     // Start Alarm task
     xTaskCreate(AlarmTask, "AlarmTask", 512, &alarmCtx, 1, nullptr);
+
+    // Start Relay task
+    xTaskCreate(RelayTask, "RelayTask", 512, &relayCtx, 1, nullptr);
 
     // Start the Clock
     clock.Start();
