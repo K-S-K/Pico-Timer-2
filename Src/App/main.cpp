@@ -146,12 +146,6 @@ void ClockDisplayTask(void* param) {
     Alarm* alarm = uiCtx->alarm;
     Clock* clock = uiCtx->clock;
 
-    char line0[21];
-    char line1[21];
-    char line2[21];
-    char line3[21];
-    char line4[21];
-
     while (true) {
         ClockEvent clockEvent;
         if (xQueueReceive(q, &clockEvent, portMAX_DELAY)) {
@@ -184,46 +178,14 @@ void ClockDisplayTask(void* param) {
                 relay->GetRelayState(relayState);
                 relay->GetRelayConfig(relayConfig);
 
-                // Format the time and date strings
-                snprintf(line0, sizeof(line0), "%04d.%02d.%02d",
-                        clockEvent.currentTime.year, clockEvent.currentTime.month, clockEvent.currentTime.day);
-                snprintf(line1, sizeof(line1), "%02d:%02d:%02d",
-                        clockEvent.currentTime.hour, clockEvent.currentTime.minute, clockEvent.currentTime.second);
+                mainScreen->SetAlarmState(alarmState, false);
+                mainScreen->SetAlarmConfig(alarmConfig, false);
+                mainScreen->SetRelayState(relayState, false);
+                mainScreen->SetRelayConfig(relayConfig, false);
+                mainScreen->SetClockTime(clockEvent.currentTime, false);
+                mainScreen->SetTemperature(thermo->GetLastReadenTemperature(), false);
 
-                // Format the temperature reading
-                float temperature = thermo->GetLastReadenTemperature();
-                snprintf(line2, sizeof(line2), "Temperature: %.1f", temperature);
-
-                // Format the Relay status string
-                snprintf(line3, sizeof(line3), "Relay: %02d:%02d-%02d:%02d",
-                        relayConfig.timeBeg.hour, relayConfig.timeBeg.minute, 
-                        relayConfig.timeEnd.hour, relayConfig.timeEnd.minute);
-
-                // Format the alarm information
-                snprintf(line4, sizeof(line4), "%02d sec at %02d:%02d %s", 
-                        alarmConfig.duration, 
-                        alarmConfig.timeBeg.hour, 
-                        alarmConfig.timeBeg.minute, 
-                        alarmConfig.enabled ? "On" : "Off");
-                
-                // Draw the bell symbol at the start of the line
-                lcd->PrintCustomCharacter(3, 0, alarmConfig.enabled && alarmState.ringing ? 0x00 : 0x01);
-                // Draw the clock and thermo symbols
-                lcd->PrintCustomCharacter(0, 0, 0x03); // Clock
-                lcd->PrintCustomCharacter(1, 0, 0x04); // Therm
-                // Print the degree symbol
-                lcd->PrintCustomCharacter(1, 18, 0x02); // Print degree symbol
-
-                // Display relay status
-                lcd->PrintCustomCharacter(2, 0, relayState.ringing ? 0x07 : 0x06);
-
-                // Show the formatted text on the LCD
-                lcd->ShowText(0, 1, line0);
-                lcd->ShowText(0, 12, line1);
-                lcd->ShowText(1, 1, line2);
-                lcd->ShowText(1, 19, "C");
-                lcd->ShowText(2, 1, line3);
-                lcd->ShowText(3, 1, line4);
+                mainScreen->Render();
             }
         }
     }
