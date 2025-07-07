@@ -24,8 +24,9 @@
 
 enum class DisplayCommandType {
     Clear,
+    PrintLine,
+    PrintSymbol,
     SetBacklight,
-    ShowText
 };
 
 struct DisplayCommand {
@@ -35,12 +36,18 @@ struct DisplayCommand {
         struct {
             int row;
             int col;
-            char text[32]; // adjust to LCD width
+            char text[21]; // adjust to LCD width
         } showText;
 
         struct {
             bool on;
         } backlight;
+
+        struct {
+            uint8_t row;
+            uint8_t col;
+            uint8_t location; // custom character location
+        } symbol;
     };
 };
 
@@ -51,7 +58,7 @@ public:
 
     void Clear() override;
     void SetBacklight(bool on) override;
-    void ShowText(int row, int col, const char* text) override;
+    void PrintLine(int row, int col, const char* text) override;
     void PrintCustomCharacter(uint8_t row, uint8_t col, uint8_t location) override;
 
 private:

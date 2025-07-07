@@ -24,7 +24,7 @@ class InputElement
 
     void Render(InputElementMode mode)
     {
-        display->ShowText(3, 0, hintClear); // Clear previous hint text
+        display->PrintLine(3, 0, hintClear); // Clear previous hint text
 
         const char* hint = 
             (type == InputElementType::Cancel) ? "Cancel" :
@@ -41,10 +41,10 @@ class InputElement
                 (mode == InputElementMode::Select) ? "^" :
                 (mode == InputElementMode::Modify) ? ">" : "?" ;
 
-            display->ShowText(row, col, label);
+            display->PrintLine(row, col, label);
         }
 
-        display->ShowText(3, 0, hint);
+        display->PrintLine(3, 0, hint);
     }
 
     InputElementType type;

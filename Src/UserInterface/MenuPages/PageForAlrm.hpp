@@ -30,7 +30,7 @@ class PageForAlrm : public EmptyPage
     {
         char buffer[32];
         snprintf(buffer, sizeof(buffer), "Duration: %02ds %-3s", seconds, enabled ? "On" : "Off");
-        display->ShowText(row, col, buffer);
+        display->PrintLine(row, col, buffer);
         
         // Render the cursor and options
         RenderElements();

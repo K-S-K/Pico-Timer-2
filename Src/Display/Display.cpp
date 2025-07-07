@@ -133,10 +133,10 @@ void Display::SetBacklight(bool on)
     xQueueSend(commandQueue, &cmd, portMAX_DELAY);
 }
 
-void Display::ShowText(int row, int col, const char* text)
+void Display::PrintLine(int row, int col, const char* text)
 {
     DisplayCommand cmd = {};
-    cmd.type = DisplayCommandType::ShowText;
+    cmd.type = DisplayCommandType::PrintLine;
     cmd.showText.row = row;
     cmd.showText.col = col;
     strncpy(cmd.showText.text, text, sizeof(cmd.showText.text) - 1);
@@ -146,7 +146,12 @@ void Display::ShowText(int row, int col, const char* text)
 
 void Display::PrintCustomCharacter(uint8_t row, uint8_t col, uint8_t location)
 {
-    physicalDisplay->PrintCustomCharacter(row, col, location);
+    DisplayCommand cmd = {};
+    cmd.type = DisplayCommandType::PrintSymbol;
+    cmd.symbol.row = row;
+    cmd.symbol.col = col;
+    cmd.symbol.location = location;
+    xQueueSend(commandQueue, &cmd, portMAX_DELAY);
 }
 
 void Display::TaskLoop(void* param)
@@ -174,7 +179,12 @@ void Display::ProcessCommand(const DisplayCommand& cmd)
             physicalDisplay->SetBacklight(cmd.backlight.on);
             break;
 
-        case DisplayCommandType::ShowText:
+        case DisplayCommandType::PrintSymbol:
+            physicalDisplay->PrintCustomCharacter(
+                cmd.symbol.row, cmd.symbol.col, cmd.symbol.location);
+            break;
+
+        case DisplayCommandType::PrintLine:
             physicalDisplay->SetCursor(cmd.showText.row, cmd.showText.col);
             physicalDisplay->PrintString(cmd.showText.text);
             break;
