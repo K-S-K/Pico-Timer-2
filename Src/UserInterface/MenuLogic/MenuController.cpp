@@ -326,10 +326,10 @@ void MenuController::Render() {
         }
 
         case MenuState::MenuScreen: {
-            display->ShowText(0, 0, "Menu");
+            display->PrintLine(0, 0, "Menu");
             char buffer[21];
             snprintf(buffer, sizeof(buffer), "  -> %-15s", currentItem->GetName());
-            display->ShowText(1, 0, buffer);
+            display->PrintLine(1, 0, buffer);
             break;
         }
 

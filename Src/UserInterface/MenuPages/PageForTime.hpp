@@ -59,7 +59,7 @@ class PageForTime : public EmptyPage
                 snprintf(buffer, sizeof(buffer), "! Unknown Mode !");
                 break;
         }
-        display->ShowText(row, col, buffer);
+        display->PrintLine(row, col, buffer);
 
         // Render the cursor and options
         RenderElements();

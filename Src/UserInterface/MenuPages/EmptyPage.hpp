@@ -24,7 +24,7 @@ EmptyPage(IDisplay* display, int row, int col, const char* headerText)
     void PrepareDisplay()
     {
         display->Clear();
-        display->ShowText(0, 0, headerText);
+        display->PrintLine(0, 0, headerText);
     }
 
     virtual void Render() = 0;

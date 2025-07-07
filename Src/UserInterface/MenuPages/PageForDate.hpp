@@ -32,7 +32,7 @@ class PageForDate : public EmptyPage
     {
         char buffer[32];
         snprintf(buffer, sizeof(buffer), "%04d.%02d.%02d", currentValue.year, currentValue.month, currentValue.day);
-        display->ShowText(row, col, buffer);
+        display->PrintLine(row, col, buffer);
 
         // Render the cursor and options
         RenderElements();

@@ -21,7 +21,7 @@ void MainScreen::Render()
     // Draw the clock and thermo symbols
     display->PrintCustomCharacter(0, 0, 0x03); // Clock
     display->PrintCustomCharacter(1, 0, 0x04); // Therm
-    
+
     // Print the degree symbol
     display->PrintCustomCharacter(1, 18, 0x02); // Print degree symbol
 
@@ -47,14 +47,14 @@ void MainScreen::Render()
             alarmConfig.timeBeg.minute, 
             alarmConfig.enabled ? "On" : "Off");
 
-    display->ShowText(0, 1, lineClockTime);
-    display->ShowText(0, 12, lineClockDate);
+    display->PrintLine(0, 1, lineClockTime);
+    display->PrintLine(0, 12, lineClockDate);
 
-    display->ShowText(1, 1, lineTemperature);
-    display->ShowText(1, 19, "C");
+    display->PrintLine(1, 1, lineTemperature);
+    display->PrintLine(1, 19, "C");
     
-    display->ShowText(2, 1, lineForRelay);
+    display->PrintLine(2, 1, lineForRelay);
     
-    display->ShowText(3, 1, lineForAlarm);
+    display->PrintLine(3, 1, lineForAlarm);
 
 }

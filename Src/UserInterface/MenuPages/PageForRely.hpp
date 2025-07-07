@@ -36,7 +36,7 @@ class PageForRelay : public EmptyPage
         snprintf(buffer, sizeof(buffer), "%02d:%02d - %02d:%02d", 
             timeOn.hour, timeOn.minute, timeOff.hour, timeOff.minute);
 
-        display->ShowText(row, col, buffer);
+        display->PrintLine(row, col, buffer);
 
         // Render the cursor and options
         RenderElements();

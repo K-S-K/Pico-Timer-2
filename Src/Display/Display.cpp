@@ -133,10 +133,10 @@ void Display::SetBacklight(bool on)
     xQueueSend(commandQueue, &cmd, portMAX_DELAY);
 }
 
-void Display::ShowText(int row, int col, const char* text)
+void Display::PrintLine(int row, int col, const char* text)
 {
     DisplayCommand cmd = {};
-    cmd.type = DisplayCommandType::ShowText;
+    cmd.type = DisplayCommandType::PrintLine;
     cmd.showText.row = row;
     cmd.showText.col = col;
     strncpy(cmd.showText.text, text, sizeof(cmd.showText.text) - 1);
@@ -174,7 +174,7 @@ void Display::ProcessCommand(const DisplayCommand& cmd)
             physicalDisplay->SetBacklight(cmd.backlight.on);
             break;
 
-        case DisplayCommandType::ShowText:
+        case DisplayCommandType::PrintLine:
             physicalDisplay->SetCursor(cmd.showText.row, cmd.showText.col);
             physicalDisplay->PrintString(cmd.showText.text);
             break;
