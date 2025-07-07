@@ -25,6 +25,7 @@
 enum class DisplayCommandType {
     Clear,
     PrintLine,
+    PrintSymbol,
     SetBacklight,
 };
 
@@ -41,6 +42,12 @@ struct DisplayCommand {
         struct {
             bool on;
         } backlight;
+
+        struct {
+            uint8_t row;
+            uint8_t col;
+            uint8_t location; // custom character location
+        } symbol;
     };
 };
 

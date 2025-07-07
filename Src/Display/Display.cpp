@@ -146,7 +146,12 @@ void Display::PrintLine(int row, int col, const char* text)
 
 void Display::PrintCustomCharacter(uint8_t row, uint8_t col, uint8_t location)
 {
-    physicalDisplay->PrintCustomCharacter(row, col, location);
+    DisplayCommand cmd = {};
+    cmd.type = DisplayCommandType::PrintSymbol;
+    cmd.symbol.row = row;
+    cmd.symbol.col = col;
+    cmd.symbol.location = location;
+    xQueueSend(commandQueue, &cmd, portMAX_DELAY);
 }
 
 void Display::TaskLoop(void* param)
@@ -172,6 +177,11 @@ void Display::ProcessCommand(const DisplayCommand& cmd)
 
         case DisplayCommandType::SetBacklight:
             physicalDisplay->SetBacklight(cmd.backlight.on);
+            break;
+
+        case DisplayCommandType::PrintSymbol:
+            physicalDisplay->PrintCustomCharacter(
+                cmd.symbol.row, cmd.symbol.col, cmd.symbol.location);
             break;
 
         case DisplayCommandType::PrintLine:
