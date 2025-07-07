@@ -20,35 +20,62 @@ struct AlarmEvent {
     DateTime time;
 };
 
+struct AlarmConfig {
+    DateTime timeBeg; // Start time of the alarm
+    DateTime timeEnd; // End time of the alarm
+    int duration = 10; // Duration of the alarm in seconds
+    bool enabled = false; // True if the alarm is set and active
+
+    void CalcAlarmTimeEnd()
+    {
+        // Calculate the end time of the alarm
+        timeEnd.CopyFrom(timeBeg);
+        timeEnd.AddSeconds(duration);
+    }
+
+    void CopyDateFrom(const AlarmConfig& other) {
+        timeBeg.CopyTimeFrom(other.timeBeg);
+        duration = other.duration;
+        enabled = other.enabled;
+        CalcAlarmTimeEnd();
+    }
+};
+
+struct AlarmState {
+    bool ringing = false; // True if the alarm is currently ringing
+
+    void CopyFrom(const AlarmState& other) {
+        ringing = other.ringing;
+    }
+};
+
 class Alarm {
 public:
     Alarm(int qLength);
 
     void ProcessCurrentTime(const DateTime& time);
 
-    void SetAlarmTime(const DateTime& alarmTime);
-    void SetAlarmLength(int seconds);
-    void SetAlarmDuty(bool isActive);
+    void SetAlarmConfig(const AlarmConfig& newConfig) {
+        config.CopyDateFrom(newConfig);
+    }
 
-    void GetAlarmTime(DateTime& outTime);
-    void GetAlarmLength(int& outSeconds);
-    void GetAlarmDuty(bool& outIsEnabled);
-    void GetAlarmStatus(bool& outIsRinging);
+    void GetAlarmConfig(AlarmConfig& outConfig) const {
+        outConfig.CopyDateFrom(config);
+    }
+
+    void GetAlarmState(AlarmState& outState) const {
+        outState.CopyFrom(state);
+    }
 
     QueueHandle_t GetEventQueue() const;
 
 private:
     static void TaskLoop(void* param);
 
-    void CalcAlarmTimeEnd();
     bool IsAlarmTime(const DateTime& currentTime) const;
 
-    DateTime alarmTimeBeg;
-    DateTime alarmTimeEnd;
-    int alarmTimeSec = 10; // seconds to ring the alarm
-    bool alarmRinging = false; // true if the alarm is currently ringing
-    bool alarmEnabled = false; // true if the alarm is set and active
-    bool running = true; // true if the clock is running (ticking)
+    AlarmState state;
+    AlarmConfig config;
 
     QueueHandle_t outQueue;
 };

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "pico/stdlib.h"
+
 class IDisplay {
 public:
     virtual ~IDisplay() = default;

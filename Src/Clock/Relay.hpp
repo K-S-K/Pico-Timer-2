@@ -20,19 +20,43 @@ struct RelayEvent {
     DateTime time;
 };
 
+struct RelayConfig {
+    DateTime timeBeg; // Start time of the relay
+    DateTime timeEnd; // End time of the relay
+    bool enabled = false; // True if the relay is set and active
+
+    void CopyDateFrom(const RelayConfig& other) {
+        timeBeg.CopyTimeFrom(other.timeBeg);
+        timeEnd.CopyTimeFrom(other.timeEnd);
+        enabled = other.enabled;
+    }
+};
+
+struct RelayState {
+    bool ringing = false; // True if the relay is currently ringing
+
+    void CopyFrom(const RelayState& other) {
+        ringing = other.ringing;
+    }
+};
+
 class Relay {
 public:
     Relay(int qLength);
 
     void ProcessCurrentTime(const DateTime& time);
 
-    void SetRelayTimes(const DateTime& timeBeg, const DateTime& timeEnd);
-    void GetRelayTimes(DateTime& outTimeBeg, DateTime& outTimeEnd);
+    void SetRelayConfig(const RelayConfig& newConfig) {
+        config.CopyDateFrom(newConfig);
+    }
 
-    void SetRelayDuty(bool isActive);
-    void GetRelayDuty(bool& outIsEnabled);
+    void GetRelayConfig(RelayConfig& outConfig) const {
+        outConfig.CopyDateFrom(config);
+    }
 
-    void GetRelayStatus(bool& outIsRinging);
+    void GetRelayState(RelayState& outState) const {
+        outState.CopyFrom(state);
+    }
 
     QueueHandle_t GetEventQueue() const;
 
@@ -41,12 +65,8 @@ private:
 
     bool IsRelayTime(const DateTime& currentTime) const;
 
-    DateTime relayTimeBeg;
-    DateTime relayTimeEnd;
-    int relayTimeSec = 10; // seconds to ring the relay
-    bool relayRinging = false; // true if the relay is currently ringing
-    bool relayEnabled = false; // true if the relay is set and active
-    bool running = true; // true if the clock is running (ticking)
+    RelayConfig config;
+    RelayState state;
 
     QueueHandle_t outQueue;
 };

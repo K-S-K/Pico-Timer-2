@@ -2,7 +2,7 @@
 
 #include "../Display/IDisplay.hpp"
 
-#include "../Menu/MenuEvent.h"
+#include "../MenuLogic/MenuEvent.h"
 #include "InputElement.hpp"
 #include "IPage.hpp"
 

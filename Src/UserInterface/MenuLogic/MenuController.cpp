@@ -5,11 +5,11 @@
 #include "../Display/Display.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 
-#include "../Pages/IPage.hpp"
-#include "../Pages/PageForDate.hpp"
-#include "../Pages/PageForTime.hpp"
-#include "../Pages/PageForAlrm.hpp"
-#include "../Pages/PageForRely.hpp"
+#include "../MenuPages/IPage.hpp"
+#include "../MenuPages/PageForDate.hpp"
+#include "../MenuPages/PageForTime.hpp"
+#include "../MenuPages/PageForAlrm.hpp"
+#include "../MenuPages/PageForRely.hpp"
 
 MenuController::MenuController(Clock* clock, Alarm* alarm, Relay* relay, IDisplay* display)
     : clock(clock), alarm(alarm), relay(relay), display(display)
@@ -114,9 +114,9 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = currentItem->GetPage();
                         if(page == nullptr)
                         {
-                            DateTime value;
-                            alarm->GetAlarmTime(value);
-                            page = new PageForTime(display, 1, 4, value, currentItem->GetHeader(), PageForTimeMode::WithoutSeconds);
+                            AlarmConfig alarmConfig;
+                            alarm->GetAlarmConfig(alarmConfig);
+                            page = new PageForTime(display, 1, 4, alarmConfig.timeBeg, currentItem->GetHeader(), PageForTimeMode::WithoutSeconds);
                             currentItem->SetPage(page);
                         }
                         page->PrepareDisplay();
@@ -127,11 +127,9 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = currentItem->GetPage();
                         if(page == nullptr)
                         {
-                            int seconds;
-                            bool enabled;
-                            alarm->GetAlarmDuty(enabled);
-                            alarm->GetAlarmLength(seconds);
-                            page = new PageForAlrm(display, 1, 2, seconds, enabled, currentItem->GetHeader());
+                            AlarmConfig alarmConfig;
+                            alarm->GetAlarmConfig(alarmConfig);
+                            page = new PageForAlrm(display, 1, 2, alarmConfig.duration, alarmConfig.enabled, currentItem->GetHeader());
                             currentItem->SetPage(page);
                         }
                         page->PrepareDisplay();
@@ -142,9 +140,9 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = currentItem->GetPage();
                         if(page == nullptr)
                         {
-                            DateTime timeOn, timeOff;
-                            relay->GetRelayTimes(timeOn, timeOff);
-                            page = new PageForRelay(display, 1, 2, timeOn, timeOff, currentItem->GetHeader());
+                            RelayConfig relayConfig;
+                            relay->GetRelayConfig(relayConfig);
+                            page = new PageForRelay(display, 1, 2, relayConfig.timeBeg, relayConfig.timeEnd, currentItem->GetHeader());
                             currentItem->SetPage(page);
                         }
                         page->PrepareDisplay();
@@ -233,14 +231,14 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             }
                             if(result == EventProcessingResult::Apply)
                             {
-                                    DateTime clockValue;
-                                    alarm->GetAlarmTime(clockValue);
+                                    AlarmConfig alarmConfig;
+                                    alarm->GetAlarmConfig(alarmConfig);
                                     DateTime editorValue;
                                     ((PageForTime*)(page))->GetCurrentTime(editorValue);
-                                    clockValue.CopyTimeFrom(editorValue);
+                                    alarmConfig.timeBeg.CopyTimeFrom(editorValue);
 
                                     // Apply the changes to the clock
-                                    alarm->SetAlarmTime(clockValue);
+                                    alarm->SetAlarmConfig(alarmConfig);
                             }
                             delete page;
                             page = nullptr;
@@ -264,9 +262,13 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             {
                                     bool enabled;
                                     int seconds;
+                                    AlarmConfig alarmConfig;
+                                    alarm->GetAlarmConfig(alarmConfig);
                                     ((PageForAlrm*)(page))->GetCurrentState(seconds, enabled);
-                                    alarm->SetAlarmDuty(enabled);
-                                    alarm->SetAlarmLength(seconds);
+                                    alarmConfig.duration = seconds;
+                                    alarmConfig.enabled = enabled;
+                                    // Apply the changes to the clock
+                                    alarm->SetAlarmConfig(alarmConfig);
                             }
                             delete page;
                             page = nullptr;
@@ -288,9 +290,11 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             }
                             if(result == EventProcessingResult::Apply)
                             {
-                                    DateTime timeOn, timeOff;
-                                    ((PageForRelay*)(page))->GetRelayTimes(timeOn, timeOff);
-                                    relay->SetRelayTimes(timeOn, timeOff);
+                                    RelayConfig relayConfig;
+                                    relay->GetRelayConfig(relayConfig);
+                                    ((PageForRelay*)(page))->GetRelayTimes(relayConfig.timeBeg, relayConfig.timeEnd);
+                                    // Apply the changes to the clock
+                                    relay->SetRelayConfig(relayConfig);
                             }
                             delete page;
                             page = nullptr;
