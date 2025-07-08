@@ -201,7 +201,6 @@ int main() {
     lcd.Clear();
 
     Display display(&lcd);
-    display.Start();
 
     static RotaryEncoder encoder(14, 15, 13);
     encoder.Init();

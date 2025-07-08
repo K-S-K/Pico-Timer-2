@@ -33,8 +33,6 @@ void Relay::ProcessCurrentTime(const DateTime& time)
             RelayEvent evt{RelayEventType::RelayOff, time};
             xQueueSend(outQueue, &evt, 0);
         }
-
-        state.ringing = isRelayNow; // Update the ringing status
     }
 }
 
