@@ -1,9 +1,83 @@
 #include <cstdio>
 
-
 #include "MainScreen.hpp"
 
-void MainScreen::Render()
+
+void MainScreen::TaskLoop(void* param)
+{
+    auto* self = static_cast<MainScreen*>(param);
+    MainScreenCommand cmd = {};
+
+    while (true)
+    {
+        if (xQueueReceive(self->commandQueue, &cmd, portMAX_DELAY))
+        {
+            self->ProcessCommand(cmd);
+        }
+    }
+}
+
+void MainScreen::ProcessCommand(const MainScreenCommand& cmd)
+{
+    switch (cmd.type)
+    {
+        case MainScreenCommandType::Clear:
+        display->Clear();
+        break;
+
+        case MainScreenCommandType::Render:
+        inner_Render();
+        break;
+
+        case MainScreenCommandType::SetClockTime:
+        clockTime.CopyFrom(cmd.clockTime);
+        if (cmd.render) {
+                inner_Render();
+        }
+        break;
+
+        case MainScreenCommandType::SetTemperature:
+        temperature = cmd.temperature;
+        if (cmd.render) {
+                inner_Render();
+        }
+        break;
+
+        case MainScreenCommandType::SetRelayConfig:
+        relayConfig.CopyDateFrom(cmd.relayConfig);
+        if (cmd.render) {
+                inner_Render();
+        }
+        break;
+
+        case MainScreenCommandType::SetRelayState:
+        relayState.CopyFrom(cmd.relayState);
+        if (cmd.render) {
+                inner_Render();
+        }
+        break;
+
+        case MainScreenCommandType::SetAlarmConfig:
+        alarmConfig.CopyDateFrom(cmd.alarmConfig);
+        if (cmd.render) {
+                inner_Render();
+        }
+        break;
+
+        case MainScreenCommandType::SetAlarmState:
+        alarmState.CopyFrom(cmd.alarmState);
+        if (cmd.render) {
+                inner_Render();
+        }
+        break;
+
+        default:
+        // Handle unknown command type
+        break;
+    }
+}
+
+void MainScreen::inner_Render()
 {
     //// Display the main screen with clock, temperature, relay, and alarm information
 
