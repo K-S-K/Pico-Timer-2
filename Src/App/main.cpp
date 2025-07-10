@@ -19,8 +19,7 @@
 
 
 struct UiTaskContext {
-    QueueHandle_t encoderQueue;
-    IDisplay* display;
+    QueueHandle_t queue;
     MenuController* menu;
 };
 
@@ -30,36 +29,33 @@ struct ClockTaskContext {
     MainScreen* mainScreen;
     MenuController* menu;
     SystemThermo* thermo;
-    IDisplay* display;
     Relay* relay;
     Alarm* alarm;
-    Clock* clock;
 };
 
 struct AlarmTaskContext {
+    QueueHandle_t queue;
     MainScreen mainScreen;
     PiezoSound sound;
     GPIOControl gpio;
-    Alarm* alarm;
 };
 
 struct RelayTaskContext {
+    QueueHandle_t queue;
     MainScreen mainScreen;
     PiezoSound sound;
     GPIOControl gpio;
-    Relay* relay;
 };
 
 static void UserInterfaceTask(void *param) {
-    UiTaskContext* uiCtx = static_cast<UiTaskContext*>(param);
-    QueueHandle_t q = uiCtx->encoderQueue;
-    MenuController* menu = uiCtx->menu;
-    IDisplay* lcd = uiCtx->display;
+    UiTaskContext* ctx = static_cast<UiTaskContext*>(param);
+    QueueHandle_t queue = ctx->queue;
+    MenuController* menu = ctx->menu;
 
     EncoderEvent clockEvent;
 
     while (true) {
-        if (xQueueReceive(q, &clockEvent, portMAX_DELAY)) {
+        if (xQueueReceive(queue, &clockEvent, portMAX_DELAY)) {
 
             // Convert EncoderEvent to MenuEvent
             MenuEvent menuEvt;
@@ -84,16 +80,15 @@ static void UserInterfaceTask(void *param) {
 }
 
 void AlarmTask(void* param) {
-    AlarmTaskContext* alarmCtx = static_cast<AlarmTaskContext*>(param);
-    MainScreen* mainScreen = &alarmCtx->mainScreen;
-    GPIOControl* gpio = &alarmCtx->gpio;
-    Alarm* alarm = alarmCtx->alarm;
-    PiezoSound* sound = &alarmCtx->sound;
-    QueueHandle_t q = alarm->GetEventQueue();
+    AlarmTaskContext* ctx = static_cast<AlarmTaskContext*>(param);
+    MainScreen* mainScreen = &ctx->mainScreen;
+    GPIOControl* gpio = &ctx->gpio;
+    PiezoSound* sound = &ctx->sound;
+    QueueHandle_t queue = ctx->queue;
 
     while (true) {
         AlarmEvent alarmEvent;
-        if (xQueueReceive(q, &alarmEvent, portMAX_DELAY)) {
+        if (xQueueReceive(queue, &alarmEvent, portMAX_DELAY)) {
             switch (alarmEvent.type) {
                 case AlarmEventType::AlarmOn:
                     gpio->AlarmOn();
@@ -120,16 +115,15 @@ void AlarmTask(void* param) {
 }
 
 void RelayTask(void* param) {
-    RelayTaskContext* relayCtx = static_cast<RelayTaskContext*>(param);
-    MainScreen* mainScreen = &relayCtx->mainScreen;
-    GPIOControl* gpio = &relayCtx->gpio;
-    Relay* relay = relayCtx->relay;
-    PiezoSound* sound = &relayCtx->sound;
-    QueueHandle_t q = relay->GetEventQueue();
+    RelayTaskContext* ctx = static_cast<RelayTaskContext*>(param);
+    MainScreen* mainScreen = &ctx->mainScreen;
+    GPIOControl* gpio = &ctx->gpio;
+    PiezoSound* sound = &ctx->sound;
+    QueueHandle_t queue = ctx->queue;
 
     while (true) {
         RelayEvent relayEvent;
-        if (xQueueReceive(q, &relayEvent, portMAX_DELAY)) {
+        if (xQueueReceive(queue, &relayEvent, portMAX_DELAY)) {
             switch (relayEvent.type) {
                 case RelayEventType::RelayOn:
                     gpio->RelayOn();
@@ -153,20 +147,18 @@ void RelayTask(void* param) {
 }
 
 void ClockDisplayTask(void* param) {
-    ClockTaskContext* uiCtx = static_cast<ClockTaskContext*>(param);
-    GPIOControl* gpio = &uiCtx->gpio;
-    QueueHandle_t q = uiCtx->queue;
-    MainScreen* mainScreen = uiCtx->mainScreen;
-    MenuController* menu = uiCtx->menu;
-    SystemThermo* thermo = uiCtx->thermo;
-    IDisplay* lcd = uiCtx->display;
-    Relay* relay = uiCtx->relay;
-    Alarm* alarm = uiCtx->alarm;
-    Clock* clock = uiCtx->clock;
+    ClockTaskContext* ctx = static_cast<ClockTaskContext*>(param);
+    GPIOControl* gpio = &ctx->gpio;
+    QueueHandle_t queue = ctx->queue;
+    MainScreen* mainScreen = ctx->mainScreen;
+    MenuController* menu = ctx->menu;
+    SystemThermo* thermo = ctx->thermo;
+    Relay* relay = ctx->relay;
+    Alarm* alarm = ctx->alarm;
 
     while (true) {
         ClockEvent clockEvent;
-        if (xQueueReceive(q, &clockEvent, portMAX_DELAY)) {
+        if (xQueueReceive(queue, &clockEvent, portMAX_DELAY)) {
 
             // Check if we are in the main screen of the menu
             if(menu->GetMenuState() != MenuState::MainScreen) {
@@ -205,10 +197,9 @@ int main() {
     lcd.Clear();
 
     Display display(&lcd);
-
     MainScreen mainScreen(&display);
 
-    static RotaryEncoder encoder(14, 15, 13);
+    RotaryEncoder encoder(14, 15, 13);
     encoder.Init();
 
     PiezoSound sound(8);
@@ -217,7 +208,7 @@ int main() {
     GPIOControl gpio(PICO_DEFAULT_LED_PIN, 6, 9);
 
     // Create Alarm instance
-    static Alarm alarm(4);
+    Alarm alarm(4);
     {
         AlarmConfig alarmConfig;
         alarm.GetAlarmConfig(alarmConfig);
@@ -245,7 +236,7 @@ int main() {
     }
 
     // Create Clock instance
-    static Clock clock(4); // static so it persists
+    Clock clock(4); // static so it persists
 
     // Optional: initialize time and alarm
     clock.SetCurrentTime({2025, 6, 19, 11, 59, 55});
@@ -253,26 +244,25 @@ int main() {
     SystemThermo thermo(0.01f, 2000, 4);
     thermo.Start(); // Start the temperature reading task
 
-    static MenuController menu(&clock, &alarm, &relay, &display);
+    MenuController menu(&clock, &alarm, &relay, &display);
 
     static UiTaskContext uiCtx = {
-        .encoderQueue = encoder.GetEventQueue(),
-        .display = &display,
+        .queue = encoder.GetEventQueue(),
         .menu = &menu
     };
 
     AlarmTaskContext alarmCtx = {
+        .queue = alarm.GetEventQueue(),
         .mainScreen = mainScreen,
         .sound = sound,
         .gpio = gpio,
-        .alarm = &alarm,
     };
 
     RelayTaskContext relayCtx = {
+        .queue = relay.GetEventQueue(),
         .mainScreen = mainScreen,
         .sound = sound,
         .gpio = gpio,
-        .relay = &relay
     };
 
     static ClockTaskContext clockCtx = {
@@ -281,10 +271,8 @@ int main() {
         .mainScreen = &mainScreen,
         .menu = &menu,
         .thermo = &thermo,
-        .display = &display,
         .relay = &relay,
         .alarm = &alarm,
-        .clock = &clock
     };
 
     // Start Encoder task
