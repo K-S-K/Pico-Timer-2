@@ -37,12 +37,14 @@ struct ClockTaskContext {
 };
 
 struct AlarmTaskContext {
+    MainScreen mainScreen;
     PiezoSound sound;
     GPIOControl gpio;
     Alarm* alarm;
 };
 
 struct RelayTaskContext {
+    MainScreen mainScreen;
     PiezoSound sound;
     GPIOControl gpio;
     Relay* relay;
@@ -83,6 +85,7 @@ static void UserInterfaceTask(void *param) {
 
 void AlarmTask(void* param) {
     AlarmTaskContext* alarmCtx = static_cast<AlarmTaskContext*>(param);
+    MainScreen* mainScreen = &alarmCtx->mainScreen;
     GPIOControl* gpio = &alarmCtx->gpio;
     Alarm* alarm = alarmCtx->alarm;
     PiezoSound* sound = &alarmCtx->sound;
@@ -94,6 +97,7 @@ void AlarmTask(void* param) {
             switch (alarmEvent.type) {
                 case AlarmEventType::AlarmOn:
                     gpio->AlarmOn();
+                    mainScreen->SetAlarmState(alarmEvent.state, false);  // Later we can add a render flag
                     // sound->PlayAlarmStart(); // Play alarm sound
                     // sound->PlayHourlyCuckoo(); // Play hourly cuckoo sound
                     // sound->PlaySweep(); // Play a sweep sound
@@ -103,6 +107,7 @@ void AlarmTask(void* param) {
 
                 case AlarmEventType::AlarmOff:
                     gpio->AlarmOff();
+                    mainScreen->SetAlarmState(alarmEvent.state, false);  // Later we can add a render flag
                     break;
             }
         }
@@ -111,6 +116,7 @@ void AlarmTask(void* param) {
 
 void RelayTask(void* param) {
     RelayTaskContext* relayCtx = static_cast<RelayTaskContext*>(param);
+    MainScreen* mainScreen = &relayCtx->mainScreen;
     GPIOControl* gpio = &relayCtx->gpio;
     Relay* relay = relayCtx->relay;
     PiezoSound* sound = &relayCtx->sound;
@@ -122,11 +128,13 @@ void RelayTask(void* param) {
             switch (relayEvent.type) {
                 case RelayEventType::RelayOn:
                     gpio->RelayOn();
+                    mainScreen->SetRelayState(relayEvent.state, false);  // Later we can add a render flag
                     sound->PlayMenuBeep(); // Play a menu beep sound
                     break;
 
                 case RelayEventType::RelayOff:
                     gpio->RelayOff();
+                    mainScreen->SetRelayState(relayEvent.state, false);  // Later we can add a render flag
                     sound->PlayMenuBeep(); // Play a menu beep sound
                     break;
             }
@@ -168,19 +176,13 @@ void ClockDisplayTask(void* param) {
                 alarm->ProcessCurrentTime(clockEvent.currentTime);
                 relay->ProcessCurrentTime(clockEvent.currentTime);
 
-                AlarmState alarmState;
                 AlarmConfig alarmConfig;
-                alarm->GetAlarmState(alarmState);
                 alarm->GetAlarmConfig(alarmConfig);
 
-                RelayState relayState;
                 RelayConfig relayConfig;
-                relay->GetRelayState(relayState);
                 relay->GetRelayConfig(relayConfig);
 
-                mainScreen->SetAlarmState(alarmState, false);
                 mainScreen->SetAlarmConfig(alarmConfig, false);
-                mainScreen->SetRelayState(relayState, false);
                 mainScreen->SetRelayConfig(relayConfig, false);
                 mainScreen->SetClockTime(clockEvent.currentTime, false);
                 mainScreen->SetTemperature(thermo->GetLastReadenTemperature(), false);
@@ -256,12 +258,14 @@ int main() {
     };
 
     AlarmTaskContext alarmCtx = {
+        .mainScreen = mainScreen,
         .sound = sound,
         .gpio = gpio,
         .alarm = &alarm,
     };
 
     RelayTaskContext relayCtx = {
+        .mainScreen = mainScreen,
         .sound = sound,
         .gpio = gpio,
         .relay = &relay

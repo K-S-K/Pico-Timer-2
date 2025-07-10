@@ -10,6 +10,14 @@
 #include <stdint.h>
 #include "DateTime.h"
 
+struct AlarmState {
+    bool ringing = false; // True if the alarm is currently ringing
+
+    void CopyFrom(const AlarmState& other) {
+        ringing = other.ringing;
+    }
+};
+
 enum class AlarmEventType {
     AlarmOn,
     AlarmOff,
@@ -18,6 +26,7 @@ enum class AlarmEventType {
 struct AlarmEvent {
     AlarmEventType type;
     DateTime time;
+    AlarmState state; // Current state of the alarm
 };
 
 struct AlarmConfig {
@@ -38,14 +47,6 @@ struct AlarmConfig {
         duration = other.duration;
         enabled = other.enabled;
         CalcAlarmTimeEnd();
-    }
-};
-
-struct AlarmState {
-    bool ringing = false; // True if the alarm is currently ringing
-
-    void CopyFrom(const AlarmState& other) {
-        ringing = other.ringing;
     }
 };
 

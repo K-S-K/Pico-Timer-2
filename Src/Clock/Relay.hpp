@@ -10,6 +10,14 @@
 #include <stdint.h>
 #include "DateTime.h"
 
+struct RelayState {
+    bool ringing = false; // True if the relay is currently ringing
+
+    void CopyFrom(const RelayState& other) {
+        ringing = other.ringing;
+    }
+};
+
 enum class RelayEventType {
     RelayOn,
     RelayOff,
@@ -18,6 +26,7 @@ enum class RelayEventType {
 struct RelayEvent {
     RelayEventType type;
     DateTime time;
+    RelayState state; // Current state of the relay
 };
 
 struct RelayConfig {
@@ -29,14 +38,6 @@ struct RelayConfig {
         timeBeg.CopyTimeFrom(other.timeBeg);
         timeEnd.CopyTimeFrom(other.timeEnd);
         enabled = other.enabled;
-    }
-};
-
-struct RelayState {
-    bool ringing = false; // True if the relay is currently ringing
-
-    void CopyFrom(const RelayState& other) {
-        ringing = other.ringing;
     }
 };
 
