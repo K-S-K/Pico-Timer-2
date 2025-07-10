@@ -109,6 +109,11 @@ void AlarmTask(void* param) {
                     gpio->AlarmOff();
                     mainScreen->SetAlarmState(alarmEvent.state, false);  // Later we can add a render flag
                     break;
+
+                case AlarmEventType::Reconfigured:
+                    // Handle reconfiguration if needed
+                    mainScreen->SetAlarmConfig(alarmEvent.config, false); // Update the alarm config
+                    break;
             }
         }
     }
@@ -136,6 +141,11 @@ void RelayTask(void* param) {
                     gpio->RelayOff();
                     mainScreen->SetRelayState(relayEvent.state, false);  // Later we can add a render flag
                     sound->PlayMenuBeep(); // Play a menu beep sound
+                    break;
+
+                case RelayEventType::Reconfigured:
+                    // Handle reconfiguration if needed
+                    mainScreen->SetRelayConfig(relayEvent.config, false); // Update the relay config
                     break;
             }
         }
@@ -176,14 +186,6 @@ void ClockDisplayTask(void* param) {
                 alarm->ProcessCurrentTime(clockEvent.currentTime);
                 relay->ProcessCurrentTime(clockEvent.currentTime);
 
-                AlarmConfig alarmConfig;
-                alarm->GetAlarmConfig(alarmConfig);
-
-                RelayConfig relayConfig;
-                relay->GetRelayConfig(relayConfig);
-
-                mainScreen->SetAlarmConfig(alarmConfig, false);
-                mainScreen->SetRelayConfig(relayConfig, false);
                 mainScreen->SetClockTime(clockEvent.currentTime, false);
                 mainScreen->SetTemperature(thermo->GetLastReadenTemperature(), false);
 
@@ -204,6 +206,8 @@ int main() {
 
     Display display(&lcd);
 
+    MainScreen mainScreen(&display);
+
     static RotaryEncoder encoder(14, 15, 13);
     encoder.Init();
 
@@ -223,6 +227,7 @@ int main() {
         alarmConfig.duration = 10; // Set default alarm length
         alarmConfig.enabled = true; // Enable the alarm by default
         alarm.SetAlarmConfig(alarmConfig);
+        mainScreen.SetAlarmConfig(alarmConfig, false);
     }
 
     // Create Relay instance
@@ -236,6 +241,7 @@ int main() {
         relayConfig.timeEnd = {2025, 1, 1, 12, 1, 0}; // End at 12:01
         relayConfig.enabled = true; // Enable the relay by default
         relay.SetRelayConfig(relayConfig);
+        mainScreen.SetRelayConfig(relayConfig, false);
     }
 
     // Create Clock instance
@@ -246,8 +252,6 @@ int main() {
 
     SystemThermo thermo(0.01f, 2000, 4);
     thermo.Start(); // Start the temperature reading task
-
-    MainScreen mainScreen(&display);
 
     static MenuController menu(&clock, &alarm, &relay, &display);
 

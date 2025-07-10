@@ -18,17 +18,6 @@ struct AlarmState {
     }
 };
 
-enum class AlarmEventType {
-    AlarmOn,
-    AlarmOff,
-};
-
-struct AlarmEvent {
-    AlarmEventType type;
-    DateTime time;
-    AlarmState state; // Current state of the alarm
-};
-
 struct AlarmConfig {
     DateTime timeBeg; // Start time of the alarm
     DateTime timeEnd; // End time of the alarm
@@ -50,6 +39,18 @@ struct AlarmConfig {
     }
 };
 
+enum class AlarmEventType {
+    AlarmOn,
+    AlarmOff,
+    Reconfigured,
+};
+
+struct AlarmEvent {
+    AlarmEventType type;
+    AlarmState state;   // Current state of the alarm
+    AlarmConfig config; // Current configuration of the alarm
+};
+
 class Alarm {
 public:
     Alarm(int qLength);
@@ -58,6 +59,8 @@ public:
 
     void SetAlarmConfig(const AlarmConfig& newConfig) {
         config.CopyDateFrom(newConfig);
+        AlarmEvent evt{AlarmEventType::Reconfigured, state, config};
+        xQueueSend(outQueue, &evt, 0);
     }
 
     void GetAlarmConfig(AlarmConfig& outConfig) const {

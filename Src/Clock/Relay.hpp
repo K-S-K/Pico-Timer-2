@@ -18,17 +18,6 @@ struct RelayState {
     }
 };
 
-enum class RelayEventType {
-    RelayOn,
-    RelayOff,
-};
-
-struct RelayEvent {
-    RelayEventType type;
-    DateTime time;
-    RelayState state; // Current state of the relay
-};
-
 struct RelayConfig {
     DateTime timeBeg; // Start time of the relay
     DateTime timeEnd; // End time of the relay
@@ -41,6 +30,18 @@ struct RelayConfig {
     }
 };
 
+enum class RelayEventType {
+    RelayOn,
+    RelayOff,
+    Reconfigured
+};
+
+struct RelayEvent {
+    RelayEventType type;
+    RelayState state;   // Current state of the relay
+    RelayConfig config; // Current configuration of the relay
+};
+
 class Relay {
 public:
     Relay(int qLength);
@@ -49,6 +50,8 @@ public:
 
     void SetRelayConfig(const RelayConfig& newConfig) {
         config.CopyDateFrom(newConfig);
+        RelayEvent evt{RelayEventType::Reconfigured, state, config};
+        xQueueSend(outQueue, &evt, 0);
     }
 
     void GetRelayConfig(RelayConfig& outConfig) const {
