@@ -10,14 +10,12 @@
 #include <stdint.h>
 #include "DateTime.h"
 
-enum class RelayEventType {
-    RelayOn,
-    RelayOff,
-};
+struct RelayState {
+    bool ringing = false; // True if the relay is currently ringing
 
-struct RelayEvent {
-    RelayEventType type;
-    DateTime time;
+    void CopyFrom(const RelayState& other) {
+        ringing = other.ringing;
+    }
 };
 
 struct RelayConfig {
@@ -32,12 +30,16 @@ struct RelayConfig {
     }
 };
 
-struct RelayState {
-    bool ringing = false; // True if the relay is currently ringing
+enum class RelayEventType {
+    RelayOn,
+    RelayOff,
+    Reconfigured
+};
 
-    void CopyFrom(const RelayState& other) {
-        ringing = other.ringing;
-    }
+struct RelayEvent {
+    RelayEventType type;
+    RelayState state;   // Current state of the relay
+    RelayConfig config; // Current configuration of the relay
 };
 
 class Relay {
@@ -48,6 +50,8 @@ public:
 
     void SetRelayConfig(const RelayConfig& newConfig) {
         config.CopyDateFrom(newConfig);
+        RelayEvent evt{RelayEventType::Reconfigured, state, config};
+        xQueueSend(outQueue, &evt, 0);
     }
 
     void GetRelayConfig(RelayConfig& outConfig) const {

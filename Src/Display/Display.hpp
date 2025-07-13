@@ -54,7 +54,6 @@ struct DisplayCommand {
 class Display : public IDisplay {
 public:
     Display(HD44780* lcd);
-    void Start();
 
     void Clear() override;
     void SetBacklight(bool on) override;

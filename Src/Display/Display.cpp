@@ -111,10 +111,7 @@ Display::Display(HD44780* lcd)
     physicalDisplay->CreateCustomCharacter(5, bellChar);
     physicalDisplay->CreateCustomCharacter(6, relayCharOpen);
     physicalDisplay->CreateCustomCharacter(7, relayCharClosed);
-}
 
-void Display::Start()
-{
     xTaskCreate(TaskLoop, "DisplayTask", 1024, this, 1, nullptr);
 }
 

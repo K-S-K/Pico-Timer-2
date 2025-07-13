@@ -24,13 +24,13 @@ void Alarm::ProcessCurrentTime(const DateTime& time)
         if (isAlarmNow && !state.ringing)
         {
             state.ringing = true;
-            AlarmEvent evt{AlarmEventType::AlarmOn, time};
+            AlarmEvent evt{AlarmEventType::AlarmOn, state, config};
             xQueueSend(outQueue, &evt, 0);
         }
         else if (!isAlarmNow && state.ringing)
         {
             state.ringing = false;
-            AlarmEvent evt{AlarmEventType::AlarmOff, time};
+            AlarmEvent evt{AlarmEventType::AlarmOff, state, config};
             xQueueSend(outQueue, &evt, 0);
         }
     }

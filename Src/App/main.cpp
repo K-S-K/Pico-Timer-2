@@ -19,8 +19,7 @@
 
 
 struct UiTaskContext {
-    QueueHandle_t encoderQueue;
-    IDisplay* display;
+    QueueHandle_t queue;
     MenuController* menu;
 };
 
@@ -29,35 +28,38 @@ struct ClockTaskContext {
     GPIOControl gpio;
     MainScreen* mainScreen;
     MenuController* menu;
-    SystemThermo* thermo;
-    IDisplay* display;
     Relay* relay;
     Alarm* alarm;
-    Clock* clock;
 };
 
 struct AlarmTaskContext {
+    QueueHandle_t queue;
+    MainScreen mainScreen;
     PiezoSound sound;
     GPIOControl gpio;
-    Alarm* alarm;
 };
 
 struct RelayTaskContext {
+    QueueHandle_t queue;
+    MainScreen mainScreen;
     PiezoSound sound;
     GPIOControl gpio;
-    Relay* relay;
+};
+
+struct SystemThermoTaskContext {
+    QueueHandle_t queue;
+    MainScreen* mainScreen;
 };
 
 static void UserInterfaceTask(void *param) {
-    UiTaskContext* uiCtx = static_cast<UiTaskContext*>(param);
-    QueueHandle_t q = uiCtx->encoderQueue;
-    MenuController* menu = uiCtx->menu;
-    IDisplay* lcd = uiCtx->display;
+    UiTaskContext* ctx = static_cast<UiTaskContext*>(param);
+    QueueHandle_t queue = ctx->queue;
+    MenuController* menu = ctx->menu;
 
     EncoderEvent clockEvent;
 
     while (true) {
-        if (xQueueReceive(q, &clockEvent, portMAX_DELAY)) {
+        if (xQueueReceive(queue, &clockEvent, portMAX_DELAY)) {
 
             // Convert EncoderEvent to MenuEvent
             MenuEvent menuEvt;
@@ -82,18 +84,19 @@ static void UserInterfaceTask(void *param) {
 }
 
 void AlarmTask(void* param) {
-    AlarmTaskContext* alarmCtx = static_cast<AlarmTaskContext*>(param);
-    GPIOControl* gpio = &alarmCtx->gpio;
-    Alarm* alarm = alarmCtx->alarm;
-    PiezoSound* sound = &alarmCtx->sound;
-    QueueHandle_t q = alarm->GetEventQueue();
+    AlarmTaskContext* ctx = static_cast<AlarmTaskContext*>(param);
+    MainScreen* mainScreen = &ctx->mainScreen;
+    GPIOControl* gpio = &ctx->gpio;
+    PiezoSound* sound = &ctx->sound;
+    QueueHandle_t queue = ctx->queue;
 
     while (true) {
         AlarmEvent alarmEvent;
-        if (xQueueReceive(q, &alarmEvent, portMAX_DELAY)) {
+        if (xQueueReceive(queue, &alarmEvent, portMAX_DELAY)) {
             switch (alarmEvent.type) {
                 case AlarmEventType::AlarmOn:
                     gpio->AlarmOn();
+                    mainScreen->SetAlarmState(alarmEvent.state, false);  // Later we can add a render flag
                     // sound->PlayAlarmStart(); // Play alarm sound
                     // sound->PlayHourlyCuckoo(); // Play hourly cuckoo sound
                     // sound->PlaySweep(); // Play a sweep sound
@@ -103,6 +106,12 @@ void AlarmTask(void* param) {
 
                 case AlarmEventType::AlarmOff:
                     gpio->AlarmOff();
+                    mainScreen->SetAlarmState(alarmEvent.state, false);  // Later we can add a render flag
+                    break;
+
+                case AlarmEventType::Reconfigured:
+                    // Handle reconfiguration if needed
+                    mainScreen->SetAlarmConfig(alarmEvent.config, false); // Update the alarm config
                     break;
             }
         }
@@ -110,24 +119,31 @@ void AlarmTask(void* param) {
 }
 
 void RelayTask(void* param) {
-    RelayTaskContext* relayCtx = static_cast<RelayTaskContext*>(param);
-    GPIOControl* gpio = &relayCtx->gpio;
-    Relay* relay = relayCtx->relay;
-    PiezoSound* sound = &relayCtx->sound;
-    QueueHandle_t q = relay->GetEventQueue();
+    RelayTaskContext* ctx = static_cast<RelayTaskContext*>(param);
+    MainScreen* mainScreen = &ctx->mainScreen;
+    GPIOControl* gpio = &ctx->gpio;
+    PiezoSound* sound = &ctx->sound;
+    QueueHandle_t queue = ctx->queue;
 
     while (true) {
         RelayEvent relayEvent;
-        if (xQueueReceive(q, &relayEvent, portMAX_DELAY)) {
+        if (xQueueReceive(queue, &relayEvent, portMAX_DELAY)) {
             switch (relayEvent.type) {
                 case RelayEventType::RelayOn:
                     gpio->RelayOn();
+                    mainScreen->SetRelayState(relayEvent.state, false);  // Later we can add a render flag
                     sound->PlayMenuBeep(); // Play a menu beep sound
                     break;
 
                 case RelayEventType::RelayOff:
                     gpio->RelayOff();
+                    mainScreen->SetRelayState(relayEvent.state, false);  // Later we can add a render flag
                     sound->PlayMenuBeep(); // Play a menu beep sound
+                    break;
+
+                case RelayEventType::Reconfigured:
+                    // Handle reconfiguration if needed
+                    mainScreen->SetRelayConfig(relayEvent.config, false); // Update the relay config
                     break;
             }
         }
@@ -135,20 +151,17 @@ void RelayTask(void* param) {
 }
 
 void ClockDisplayTask(void* param) {
-    ClockTaskContext* uiCtx = static_cast<ClockTaskContext*>(param);
-    GPIOControl* gpio = &uiCtx->gpio;
-    QueueHandle_t q = uiCtx->queue;
-    MainScreen* mainScreen = uiCtx->mainScreen;
-    MenuController* menu = uiCtx->menu;
-    SystemThermo* thermo = uiCtx->thermo;
-    IDisplay* lcd = uiCtx->display;
-    Relay* relay = uiCtx->relay;
-    Alarm* alarm = uiCtx->alarm;
-    Clock* clock = uiCtx->clock;
+    ClockTaskContext* ctx = static_cast<ClockTaskContext*>(param);
+    GPIOControl* gpio = &ctx->gpio;
+    QueueHandle_t queue = ctx->queue;
+    MainScreen* mainScreen = ctx->mainScreen;
+    MenuController* menu = ctx->menu;
+    Relay* relay = ctx->relay;
+    Alarm* alarm = ctx->alarm;
 
     while (true) {
         ClockEvent clockEvent;
-        if (xQueueReceive(q, &clockEvent, portMAX_DELAY)) {
+        if (xQueueReceive(queue, &clockEvent, portMAX_DELAY)) {
 
             // Check if we are in the main screen of the menu
             if(menu->GetMenuState() != MenuState::MainScreen) {
@@ -168,25 +181,23 @@ void ClockDisplayTask(void* param) {
                 alarm->ProcessCurrentTime(clockEvent.currentTime);
                 relay->ProcessCurrentTime(clockEvent.currentTime);
 
-                AlarmState alarmState;
-                AlarmConfig alarmConfig;
-                alarm->GetAlarmState(alarmState);
-                alarm->GetAlarmConfig(alarmConfig);
-
-                RelayState relayState;
-                RelayConfig relayConfig;
-                relay->GetRelayState(relayState);
-                relay->GetRelayConfig(relayConfig);
-
-                mainScreen->SetAlarmState(alarmState, false);
-                mainScreen->SetAlarmConfig(alarmConfig, false);
-                mainScreen->SetRelayState(relayState, false);
-                mainScreen->SetRelayConfig(relayConfig, false);
                 mainScreen->SetClockTime(clockEvent.currentTime, false);
-                mainScreen->SetTemperature(thermo->GetLastReadenTemperature(), false);
 
                 mainScreen->Render();
             }
+        }
+    }
+}
+
+void SystemThermoTask(void* param) {
+    SystemThermoTaskContext* ctx = static_cast<SystemThermoTaskContext*>(param);
+    QueueHandle_t queue = ctx->queue;
+    MainScreen* mainScreen = ctx->mainScreen;
+
+    while (true) {
+        TemperatureEvent tempEvent;
+        if (xQueueReceive(queue, &tempEvent, portMAX_DELAY)) {
+            mainScreen->SetTemperature(tempEvent.temperatureC, false);
         }
     }
 }
@@ -201,9 +212,9 @@ int main() {
     lcd.Clear();
 
     Display display(&lcd);
-    display.Start();
+    MainScreen mainScreen(&display);
 
-    static RotaryEncoder encoder(14, 15, 13);
+    RotaryEncoder encoder(14, 15, 13);
     encoder.Init();
 
     PiezoSound sound(8);
@@ -212,7 +223,7 @@ int main() {
     GPIOControl gpio(PICO_DEFAULT_LED_PIN, 6, 9);
 
     // Create Alarm instance
-    static Alarm alarm(4);
+    Alarm alarm(4);
     {
         AlarmConfig alarmConfig;
         alarm.GetAlarmConfig(alarmConfig);
@@ -222,6 +233,7 @@ int main() {
         alarmConfig.duration = 10; // Set default alarm length
         alarmConfig.enabled = true; // Enable the alarm by default
         alarm.SetAlarmConfig(alarmConfig);
+        mainScreen.SetAlarmConfig(alarmConfig, false);
     }
 
     // Create Relay instance
@@ -235,10 +247,11 @@ int main() {
         relayConfig.timeEnd = {2025, 1, 1, 12, 1, 0}; // End at 12:01
         relayConfig.enabled = true; // Enable the relay by default
         relay.SetRelayConfig(relayConfig);
+        mainScreen.SetRelayConfig(relayConfig, false);
     }
 
     // Create Clock instance
-    static Clock clock(4); // static so it persists
+    Clock clock(4); // static so it persists
 
     // Optional: initialize time and alarm
     clock.SetCurrentTime({2025, 6, 19, 11, 59, 55});
@@ -246,26 +259,25 @@ int main() {
     SystemThermo thermo(0.01f, 2000, 4);
     thermo.Start(); // Start the temperature reading task
 
-    MainScreen mainScreen(&display);
-
-    static MenuController menu(&clock, &alarm, &relay, &display);
+    MenuController menu(&clock, &alarm, &relay, &display);
 
     static UiTaskContext uiCtx = {
-        .encoderQueue = encoder.GetEventQueue(),
-        .display = &display,
+        .queue = encoder.GetEventQueue(),
         .menu = &menu
     };
 
     AlarmTaskContext alarmCtx = {
+        .queue = alarm.GetEventQueue(),
+        .mainScreen = mainScreen,
         .sound = sound,
         .gpio = gpio,
-        .alarm = &alarm,
     };
 
     RelayTaskContext relayCtx = {
+        .queue = relay.GetEventQueue(),
+        .mainScreen = mainScreen,
         .sound = sound,
         .gpio = gpio,
-        .relay = &relay
     };
 
     static ClockTaskContext clockCtx = {
@@ -273,11 +285,13 @@ int main() {
         .gpio = gpio,
         .mainScreen = &mainScreen,
         .menu = &menu,
-        .thermo = &thermo,
-        .display = &display,
         .relay = &relay,
         .alarm = &alarm,
-        .clock = &clock
+    };
+
+    static SystemThermoTaskContext thermoCtx = {
+        .queue = thermo.GetEventQueue(),
+        .mainScreen = &mainScreen
     };
 
     // Start Encoder task
@@ -291,6 +305,9 @@ int main() {
 
     // Start Relay task
     xTaskCreate(RelayTask, "RelayTask", 512, &relayCtx, 1, nullptr);
+
+    // Start SystemThermo task
+    xTaskCreate(SystemThermoTask, "SystemThermo", 512, &thermoCtx, 1, nullptr);
 
     // Start the Clock
     clock.Start();

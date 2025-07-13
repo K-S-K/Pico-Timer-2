@@ -24,17 +24,15 @@ void Relay::ProcessCurrentTime(const DateTime& time)
         if (isRelayNow && !state.ringing)
         {
             state.ringing = true;
-            RelayEvent evt{RelayEventType::RelayOn, time};
+            RelayEvent evt{RelayEventType::RelayOn, state, config};
             xQueueSend(outQueue, &evt, 0);
         }
         else if (!isRelayNow && state.ringing)
         {
             state.ringing = false;
-            RelayEvent evt{RelayEventType::RelayOff, time};
+            RelayEvent evt{RelayEventType::RelayOff, state, config};
             xQueueSend(outQueue, &evt, 0);
         }
-
-        state.ringing = isRelayNow; // Update the ringing status
     }
 }
 

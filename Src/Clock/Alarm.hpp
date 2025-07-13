@@ -10,14 +10,12 @@
 #include <stdint.h>
 #include "DateTime.h"
 
-enum class AlarmEventType {
-    AlarmOn,
-    AlarmOff,
-};
+struct AlarmState {
+    bool ringing = false; // True if the alarm is currently ringing
 
-struct AlarmEvent {
-    AlarmEventType type;
-    DateTime time;
+    void CopyFrom(const AlarmState& other) {
+        ringing = other.ringing;
+    }
 };
 
 struct AlarmConfig {
@@ -41,12 +39,16 @@ struct AlarmConfig {
     }
 };
 
-struct AlarmState {
-    bool ringing = false; // True if the alarm is currently ringing
+enum class AlarmEventType {
+    AlarmOn,
+    AlarmOff,
+    Reconfigured,
+};
 
-    void CopyFrom(const AlarmState& other) {
-        ringing = other.ringing;
-    }
+struct AlarmEvent {
+    AlarmEventType type;
+    AlarmState state;   // Current state of the alarm
+    AlarmConfig config; // Current configuration of the alarm
 };
 
 class Alarm {
@@ -57,6 +59,8 @@ public:
 
     void SetAlarmConfig(const AlarmConfig& newConfig) {
         config.CopyDateFrom(newConfig);
+        AlarmEvent evt{AlarmEventType::Reconfigured, state, config};
+        xQueueSend(outQueue, &evt, 0);
     }
 
     void GetAlarmConfig(AlarmConfig& outConfig) const {
