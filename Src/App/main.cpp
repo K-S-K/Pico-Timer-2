@@ -28,7 +28,6 @@ struct ClockTaskContext {
     GPIOControl gpio;
     MainScreen* mainScreen;
     MenuController* menu;
-    SystemThermo* thermo;
     Relay* relay;
     Alarm* alarm;
 };
@@ -45,6 +44,11 @@ struct RelayTaskContext {
     MainScreen mainScreen;
     PiezoSound sound;
     GPIOControl gpio;
+};
+
+struct SystemThermoTaskContext {
+    QueueHandle_t queue;
+    MainScreen* mainScreen;
 };
 
 static void UserInterfaceTask(void *param) {
@@ -152,7 +156,6 @@ void ClockDisplayTask(void* param) {
     QueueHandle_t queue = ctx->queue;
     MainScreen* mainScreen = ctx->mainScreen;
     MenuController* menu = ctx->menu;
-    SystemThermo* thermo = ctx->thermo;
     Relay* relay = ctx->relay;
     Alarm* alarm = ctx->alarm;
 
@@ -179,10 +182,22 @@ void ClockDisplayTask(void* param) {
                 relay->ProcessCurrentTime(clockEvent.currentTime);
 
                 mainScreen->SetClockTime(clockEvent.currentTime, false);
-                mainScreen->SetTemperature(thermo->GetLastReadenTemperature(), false);
 
                 mainScreen->Render();
             }
+        }
+    }
+}
+
+void SystemThermoTask(void* param) {
+    SystemThermoTaskContext* ctx = static_cast<SystemThermoTaskContext*>(param);
+    QueueHandle_t queue = ctx->queue;
+    MainScreen* mainScreen = ctx->mainScreen;
+
+    while (true) {
+        TemperatureEvent tempEvent;
+        if (xQueueReceive(queue, &tempEvent, portMAX_DELAY)) {
+            mainScreen->SetTemperature(tempEvent.temperatureC, false);
         }
     }
 }
@@ -270,9 +285,13 @@ int main() {
         .gpio = gpio,
         .mainScreen = &mainScreen,
         .menu = &menu,
-        .thermo = &thermo,
         .relay = &relay,
         .alarm = &alarm,
+    };
+
+    static SystemThermoTaskContext thermoCtx = {
+        .queue = thermo.GetEventQueue(),
+        .mainScreen = &mainScreen
     };
 
     // Start Encoder task
@@ -286,6 +305,9 @@ int main() {
 
     // Start Relay task
     xTaskCreate(RelayTask, "RelayTask", 512, &relayCtx, 1, nullptr);
+
+    // Start SystemThermo task
+    xTaskCreate(SystemThermoTask, "SystemThermo", 512, &thermoCtx, 1, nullptr);
 
     // Start the Clock
     clock.Start();
