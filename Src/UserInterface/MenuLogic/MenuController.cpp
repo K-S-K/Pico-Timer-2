@@ -11,8 +11,8 @@
 #include "../MenuPages/PageForAlrm.hpp"
 #include "../MenuPages/PageForRely.hpp"
 
-MenuController::MenuController(Clock* clock, Alarm* alarm, Relay* relay, IDisplay* display)
-    : clock(clock), alarm(alarm), relay(relay), display(display)
+MenuController::MenuController(Clock* clock, Alarm* alarm, Relay* relay, MenuScreen* menuScreen, IDisplay* display)
+    : clock(clock), alarm(alarm), relay(relay), menuScreen(menuScreen), display(display)
     {
         count = static_cast<int>(MenuItemType::Count);
         // Initialize menu items

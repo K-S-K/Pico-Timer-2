@@ -261,7 +261,7 @@ int main() {
     SystemThermo thermo(0.01f, 2000, 4);
     thermo.Start(); // Start the temperature reading task
 
-    MenuController menu(&clock, &alarm, &relay, &display);
+    MenuController menu(&clock, &alarm, &relay, &menuScreen, &display);
 
     static UiTaskContext uiCtx = {
         .queue = encoder.GetEventQueue(),
