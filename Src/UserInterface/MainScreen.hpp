@@ -6,16 +6,16 @@
 
 #include "../Display/IDisplay.hpp"
 
-    enum class MainScreenCommandType {
-        Clear,
-        Render,
-        SetClockTime,
-        SetTemperature,
-        SetRelayConfig,
-        SetRelayState,
-        SetAlarmConfig,
-        SetAlarmState,
-    };
+enum class MainScreenCommandType {
+    Clear,
+    Render,
+    SetClockTime,
+    SetTemperature,
+    SetRelayConfig,
+    SetRelayState,
+    SetAlarmConfig,
+    SetAlarmState,
+};
 
 struct MainScreenCommand {
     MainScreenCommandType type;

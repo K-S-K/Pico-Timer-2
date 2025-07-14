@@ -14,6 +14,7 @@
 #include "../Drivers/SystemThermo.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 #include "../UserInterface/MainScreen.hpp"
+#include "../UserInterface/MenuScreen.hpp"
 #include "../UserInterface/MenuLogic/MenuEvent.h"
 #include "../UserInterface/MenuLogic/MenuController.hpp"
 
@@ -213,6 +214,7 @@ int main() {
 
     Display display(&lcd);
     MainScreen mainScreen(&display);
+    MenuScreen menuScreen(&display);
 
     RotaryEncoder encoder(14, 15, 13);
     encoder.Init();

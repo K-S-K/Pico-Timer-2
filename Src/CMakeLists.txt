@@ -43,6 +43,7 @@ add_executable(${NAME}
         ./Drivers/SystemThermo.cpp
         ./Drivers/RotaryEncoder.cpp
         ./UserInterface/MainScreen.cpp
+        ./UserInterface/MenuScreen.cpp
         ./UserInterface/MenuLogic/MenuController.cpp
         )
 
