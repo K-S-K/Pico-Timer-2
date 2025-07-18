@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../MenuLogic/MenuEvent.h"
+
 enum class EventProcessingResult {
     Continue,
     Cancel,

@@ -8,6 +8,7 @@
 #include "../Clock/Relay.hpp"
 #include "../Display/IDisplay.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
+#include "../UserInterface/MenuScreen.hpp"
 
 #include "MenuEvent.h"
 #include "MenuItem.hpp"
@@ -20,7 +21,7 @@ enum class MenuState {
 
 class MenuController {
 public:
-    MenuController(Clock* clock, Alarm* alarm, Relay* relay, IDisplay* display);
+    MenuController(Clock* clock, Alarm* alarm, Relay* relay, MenuScreen* menuScreen, IDisplay* display);
     void ProcessEvent(MenuEvent event);
     MenuState GetMenuState() const { return menuState; }
 
@@ -29,12 +30,17 @@ private:
     void ProcessMenuEvent(MenuEvent event);
     void Render();
 
+    void SetCurrentItem(MenuItem* item) {
+        currentItem = item;
+        menuScreen->SetCurrentItem(currentItem->GetIndex());
+    }
+
     void SelectNextItem() {
-        currentItem = GetNextItem(currentItem);
+        SetCurrentItem(GetNextItem(currentItem));
     }
 
     void SelectPrevItem() {
-        currentItem = GetPrevItem(currentItem);
+        SetCurrentItem(GetPrevItem(currentItem));
     }
 
     MenuItem* GetPrevItem(MenuItem* item) {
@@ -53,5 +59,6 @@ private:
     Alarm* alarm = nullptr;
     Relay* relay = nullptr;
     IDisplay* display = nullptr;
+    MenuScreen* menuScreen = nullptr;
     MenuItem *menuItems = nullptr;
 };
