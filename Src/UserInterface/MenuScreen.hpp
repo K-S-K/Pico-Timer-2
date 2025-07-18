@@ -45,10 +45,52 @@ public:
         xTaskCreate(TaskLoop, "MenuScreenTask", 2048, this, tskIDLE_PRIORITY + 1, nullptr);
     }
 
+    ~MenuScreen() {
+        vQueueDelete(commandQueue);
+    }
+
+    void Clear() {
+        MenuScreenCommand cmd = { MenuScreenCommandType::Clear };
+        SendCommand(cmd);
+    }
+
+    void Render() {
+        MenuScreenCommand cmd = { MenuScreenCommandType::Render, true };
+        SendCommand(cmd);
+    }
+
+    void SetItems(MenuItem* items) {
+        MenuScreenCommand cmd = { MenuScreenCommandType::SetItems };
+        cmd.items.items = items;
+        SendCommand(cmd);
+    }
+
+    void SetHeader(const char* text) {
+        MenuScreenCommand cmd = { MenuScreenCommandType::SetHeader };
+        snprintf(cmd.headerText.text, sizeof(cmd.headerText.text), "%s", text);
+        SendCommand(cmd);
+    }
+
+    void SetCurrentItem(uint8_t index) {
+        MenuScreenCommand cmd = { MenuScreenCommandType::SetCurrentItem };
+        cmd.item.index = index;
+        SendCommand(cmd);
+    }
+
     private:
     QueueHandle_t commandQueue;
     static void TaskLoop(void* param);
     void ProcessCommand(const MenuScreenCommand& cmd);
+
+    void SendCommand(const MenuScreenCommand& cmd) {
+        xQueueSend(commandQueue, &cmd, portMAX_DELAY);
+    }
+
+private:
+    char header[21] = {0};
+    MenuItem* items = nullptr;
+    uint8_t currentItemIndex = 0;
+    MenuItem* currentItem = nullptr;
 
 private:
     IDisplay* display;

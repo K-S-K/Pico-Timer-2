@@ -31,7 +31,12 @@ MenuController::MenuController(Clock* clock, Alarm* alarm, Relay* relay, MenuScr
         // to the "Exit" item to let user
         // easily exit the menu in case
         // he entered it by mistake
-        currentItem = &menuItems[6];
+        SetCurrentItem(&menuItems[6]);
+
+        // Initialize the menu screen
+        menuScreen->SetHeader("Menu");
+        menuScreen->SetItems(menuItems);
+        menuScreen->SetCurrentItem(currentItem->GetIndex());
     }
 
 void MenuController::ProcessEvent(MenuEvent event) {
@@ -53,7 +58,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                 // Set the initial item to the "Cancel" item
                 // so if user entered the menu by mistake, he can exit it
                 // by pressing the button again
-                currentItem = &menuItems[static_cast<int>(MenuItemType::Exit)];
+                SetCurrentItem(&menuItems[static_cast<int>(MenuItemType::Exit)]);
             }
             // Otherwise, we ignore the event in the main screen
             else
@@ -326,10 +331,7 @@ void MenuController::Render() {
         }
 
         case MenuState::MenuScreen: {
-            display->PrintLine(0, 0, "Menu");
-            char buffer[21];
-            snprintf(buffer, sizeof(buffer), "  -> %-15s", currentItem->GetName());
-            display->PrintLine(1, 0, buffer);
+            menuScreen->Render();
             break;
         }
 

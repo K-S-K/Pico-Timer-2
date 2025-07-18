@@ -30,12 +30,17 @@ private:
     void ProcessMenuEvent(MenuEvent event);
     void Render();
 
+    void SetCurrentItem(MenuItem* item) {
+        currentItem = item;
+        menuScreen->SetCurrentItem(currentItem->GetIndex());
+    }
+
     void SelectNextItem() {
-        currentItem = GetNextItem(currentItem);
+        SetCurrentItem(GetNextItem(currentItem));
     }
 
     void SelectPrevItem() {
-        currentItem = GetPrevItem(currentItem);
+        SetCurrentItem(GetPrevItem(currentItem));
     }
 
     MenuItem* GetPrevItem(MenuItem* item) {
