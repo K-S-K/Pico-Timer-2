@@ -17,7 +17,6 @@ MenuController::MenuController(Clock* clock, Alarm* alarm, Relay* relay, MenuScr
 
         // Initialize the menu screen
         menuScreen->SetHeader("Menu");
-        DisplayCurrentItem();
     }
 
 void MenuController::ProcessEvent(MenuEvent event) {

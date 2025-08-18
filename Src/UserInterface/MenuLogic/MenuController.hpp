@@ -30,23 +30,16 @@ private:
     void ProcessMenuEvent(MenuEvent event);
     void Render();
 
-    void DisplayCurrentItem() {
-        menuScreen->SetCurrentItem(menuContent->currentItem->GetIndex());
-    }
-
     void SetCurrentItem(MenuItem* item) {
         menuContent->SetCurrentItem(item);
-        DisplayCurrentItem();
     }
 
     void SelectNextItem() {
         menuContent->SelectNextItem();
-        DisplayCurrentItem();
     }
 
     void SelectPrevItem() {
         menuContent->SelectPrevItem();
-        DisplayCurrentItem();
     }
 
     MenuState menuState = MenuState::MainScreen;

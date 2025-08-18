@@ -12,7 +12,6 @@ enum class MenuScreenCommandType {
     Clear,
     Render,
     SetHeader,
-    SetCurrentItem,
 };
 
 struct MenuScreenCommand {
@@ -40,8 +39,6 @@ public:
     MenuScreen(IDisplay* display, MenuContent* menuContent)
         : display(display), menuContent(menuContent)
     {
-        currentItem = &menuContent->menuItems[currentItemIndex];
-
         commandQueue = xQueueCreate(4, sizeof(MenuScreenCommand));
         xTaskCreate(TaskLoop, "MenuScreenTask", 2048, this, tskIDLE_PRIORITY + 1, nullptr);
     }
@@ -66,12 +63,6 @@ public:
         SendCommand(cmd);
     }
 
-    void SetCurrentItem(uint8_t index) {
-        MenuScreenCommand cmd = { MenuScreenCommandType::SetCurrentItem };
-        cmd.item.index = index;
-        SendCommand(cmd);
-    }
-
     private:
     QueueHandle_t commandQueue;
     static void TaskLoop(void* param);
@@ -83,8 +74,6 @@ public:
 
 private:
     char header[21] = {0};
-    uint8_t currentItemIndex = 0;
-    MenuItem* currentItem = nullptr;
     MenuContent* menuContent = nullptr;
 
 private:

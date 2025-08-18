@@ -27,23 +27,20 @@ void MenuScreen::ProcessCommand(const MenuScreenCommand& cmd)
         case MenuScreenCommandType::Render:
             // Render the menu screen
             display->PrintLine(0, 0, header);
-            if (currentItem != nullptr)
             {
-                char buffer[21];
-                snprintf(buffer, sizeof(buffer), "  -> %-15s", currentItem->GetName());
-                display->PrintLine(1, 0, buffer);
+                MenuItem* currentItem = menuContent->currentItem;
+                if (currentItem != nullptr)
+                {
+                    char buffer[21];
+                    snprintf(buffer, sizeof(buffer), "  -> %-15s", currentItem->GetName());
+                    display->PrintLine(1, 0, buffer);
+                }
             }
             break;
 
         case MenuScreenCommandType::SetHeader:
             // Set header text
             snprintf(header, sizeof(header), "%s", cmd.headerText.text);
-            break;
-
-        case MenuScreenCommandType::SetCurrentItem:
-            // Set current item index
-            currentItemIndex = cmd.item.index;
-            currentItem = &menuContent->menuItems[currentItemIndex];
             break;
 
         default:
