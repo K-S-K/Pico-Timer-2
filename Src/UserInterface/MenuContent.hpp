@@ -13,13 +13,14 @@ public:
         currentItem = item;
     }
 
-
-    MenuItem* GetPrevItem(MenuItem* item) {
-        return &menuItems[item->GetPrevItemIndex(count)];
+    MenuItem* SelectPrevItem() {
+        SetCurrentItem(&menuItems[currentItem->GetPrevItemIndex(count)]);
+        return currentItem;
     }
 
-    MenuItem* GetNextItem(MenuItem* item) {
-        return &menuItems[item->GetNextItemIndex(count)];
+    MenuItem* SelectNextItem() {
+        SetCurrentItem(&menuItems[currentItem->GetNextItemIndex(count)]);
+        return currentItem;
     }
 
     int count = 0;

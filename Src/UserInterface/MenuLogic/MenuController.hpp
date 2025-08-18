@@ -30,21 +30,26 @@ private:
     void ProcessMenuEvent(MenuEvent event);
     void Render();
 
+    void DisplayCurrentItem() {
+        menuScreen->SetCurrentItem(menuContent->currentItem->GetIndex());
+    }
+
     void SetCurrentItem(MenuItem* item) {
-        currentItem = item;
-        menuScreen->SetCurrentItem(currentItem->GetIndex());
+        menuContent->SetCurrentItem(item);
+        DisplayCurrentItem();
     }
 
     void SelectNextItem() {
-        SetCurrentItem(menuContent->GetNextItem(currentItem));
+        menuContent->SelectNextItem();
+        DisplayCurrentItem();
     }
 
     void SelectPrevItem() {
-        SetCurrentItem(menuContent->GetPrevItem(currentItem));
+        menuContent->SelectPrevItem();
+        DisplayCurrentItem();
     }
 
     MenuState menuState = MenuState::MainScreen;
-    MenuItem *currentItem = nullptr; // rm
 
     Clock* clock = nullptr;
     Alarm* alarm = nullptr;

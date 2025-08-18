@@ -6,7 +6,7 @@ MenuContent::MenuContent(void) {
 
     count = static_cast<int>(MenuItemType::Count);
 
-        // Initialize menu items
+    // Initialize menu items
     menuItems = new MenuItem[7]
     {
         MenuItem(0, MenuItemType::Date, "Clock Date", "Set Clock Date"),
@@ -17,6 +17,12 @@ MenuContent::MenuContent(void) {
         MenuItem(5, MenuItemType::System, "System", "Configure System"),
         MenuItem(6, MenuItemType::Exit, "Exit", "Exit Menu")
     };
+
+    // Initialize the current menu item 
+    // to the "Exit" item to let user
+    // easily exit the menu in case
+    // he entered it by mistake
+    SetCurrentItem(&menuItems[6]);
 }
 
 MenuContent::~MenuContent() {
