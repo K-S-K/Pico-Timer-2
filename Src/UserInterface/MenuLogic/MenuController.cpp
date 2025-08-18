@@ -11,31 +11,18 @@
 #include "../MenuPages/PageForAlrm.hpp"
 #include "../MenuPages/PageForRely.hpp"
 
-MenuController::MenuController(Clock* clock, Alarm* alarm, Relay* relay, MenuScreen* menuScreen, IDisplay* display)
-    : clock(clock), alarm(alarm), relay(relay), menuScreen(menuScreen), display(display)
+MenuController::MenuController(Clock* clock, Alarm* alarm, Relay* relay, MenuScreen* menuScreen, IDisplay* display, MenuContent* menuContent)
+    : clock(clock), alarm(alarm), relay(relay), menuScreen(menuScreen), display(display), menuContent(menuContent)
     {
-        count = static_cast<int>(MenuItemType::Count);
-        // Initialize menu items
-        menuItems = new MenuItem[7]
-        {
-            MenuItem(0, MenuItemType::Date, "Clock Date", "Set Clock Date"),
-            MenuItem(1, MenuItemType::Time, "Clock Time", "Set Clock Time"),
-            MenuItem(2, MenuItemType::AlarmTime, "Alarm Time", "Set Alarm Time"),
-            MenuItem(3, MenuItemType::AlarmConfig, "Alarm Config", "Configure Alarm"),
-            MenuItem(4, MenuItemType::Relay, "Relay", "Set Relay Time"),
-            MenuItem(5, MenuItemType::System, "System", "Configure System"),
-            MenuItem(6, MenuItemType::Exit, "Exit", "Exit Menu")
-        };
 
         // Initialize the current menu item 
         // to the "Exit" item to let user
         // easily exit the menu in case
         // he entered it by mistake
-        SetCurrentItem(&menuItems[6]);
+        SetCurrentItem(&menuContent->menuItems[6]);
 
         // Initialize the menu screen
         menuScreen->SetHeader("Menu");
-        menuScreen->SetItems(menuItems);
         menuScreen->SetCurrentItem(currentItem->GetIndex());
     }
 
@@ -58,7 +45,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                 // Set the initial item to the "Cancel" item
                 // so if user entered the menu by mistake, he can exit it
                 // by pressing the button again
-                SetCurrentItem(&menuItems[static_cast<int>(MenuItemType::Exit)]);
+                SetCurrentItem(&menuContent->menuItems[static_cast<int>(MenuItemType::Exit)]);
             }
             // Otherwise, we ignore the event in the main screen
             else

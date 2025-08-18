@@ -35,12 +35,6 @@ void MenuScreen::ProcessCommand(const MenuScreenCommand& cmd)
             }
             break;
 
-        case MenuScreenCommandType::SetItems:
-            // Set menu items
-            items = cmd.items.items;
-            currentItem = &items[currentItemIndex];
-            break;
-
         case MenuScreenCommandType::SetHeader:
             // Set header text
             snprintf(header, sizeof(header), "%s", cmd.headerText.text);
@@ -49,7 +43,7 @@ void MenuScreen::ProcessCommand(const MenuScreenCommand& cmd)
         case MenuScreenCommandType::SetCurrentItem:
             // Set current item index
             currentItemIndex = cmd.item.index;
-            currentItem = &items[currentItemIndex];
+            currentItem = &menuContent->menuItems[currentItemIndex];
             break;
 
         default:

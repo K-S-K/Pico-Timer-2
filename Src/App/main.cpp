@@ -15,6 +15,7 @@
 #include "../Drivers/RotaryEncoder.hpp"
 #include "../UserInterface/MainScreen.hpp"
 #include "../UserInterface/MenuScreen.hpp"
+#include "../UserInterface/MenuContent.hpp"
 #include "../UserInterface/MenuLogic/MenuEvent.h"
 #include "../UserInterface/MenuLogic/MenuController.hpp"
 
@@ -212,9 +213,11 @@ int main() {
     lcd.Init();
     lcd.Clear();
 
+    MenuContent menuContent;
+
     Display display(&lcd);
     MainScreen mainScreen(&display);
-    MenuScreen menuScreen(&display);
+    MenuScreen menuScreen(&display, &menuContent);
 
     RotaryEncoder encoder(14, 15, 13);
     encoder.Init();
@@ -261,7 +264,7 @@ int main() {
     SystemThermo thermo(0.01f, 2000, 4);
     thermo.Start(); // Start the temperature reading task
 
-    MenuController menu(&clock, &alarm, &relay, &menuScreen, &display);
+    MenuController menu(&clock, &alarm, &relay, &menuScreen, &display, &menuContent);
 
     static UiTaskContext uiCtx = {
         .queue = encoder.GetEventQueue(),

@@ -21,7 +21,7 @@ enum class MenuState {
 
 class MenuController {
 public:
-    MenuController(Clock* clock, Alarm* alarm, Relay* relay, MenuScreen* menuScreen, IDisplay* display);
+    MenuController(Clock* clock, Alarm* alarm, Relay* relay, MenuScreen* menuScreen, IDisplay* display, MenuContent* menuContent);
     void ProcessEvent(MenuEvent event);
     MenuState GetMenuState() const { return menuState; }
 
@@ -36,29 +36,20 @@ private:
     }
 
     void SelectNextItem() {
-        SetCurrentItem(GetNextItem(currentItem));
+        SetCurrentItem(menuContent->GetNextItem(currentItem));
     }
 
     void SelectPrevItem() {
-        SetCurrentItem(GetPrevItem(currentItem));
-    }
-
-    MenuItem* GetPrevItem(MenuItem* item) {
-        return &menuItems[item->GetPrevItemIndex(count)];
-    }
-
-    MenuItem* GetNextItem(MenuItem* item) {
-        return &menuItems[item->GetNextItemIndex(count)];
+        SetCurrentItem(menuContent->GetPrevItem(currentItem));
     }
 
     MenuState menuState = MenuState::MainScreen;
-    MenuItem *currentItem = nullptr;
+    MenuItem *currentItem = nullptr; // rm
 
-    int count = 0;
     Clock* clock = nullptr;
     Alarm* alarm = nullptr;
     Relay* relay = nullptr;
     IDisplay* display = nullptr;
     MenuScreen* menuScreen = nullptr;
-    MenuItem *menuItems = nullptr;
+    MenuContent* menuContent = nullptr;
 };
