@@ -5,15 +5,13 @@
 #include "task.h"
 #include <stdint.h>
 
-#include "MenuLogic/MenuItem.hpp"
+#include "MenuContent.hpp"
 #include "../Display/IDisplay.hpp"
 
 enum class MenuScreenCommandType {
     Clear,
     Render,
-    SetItems,
     SetHeader,
-    SetCurrentItem,
 };
 
 struct MenuScreenCommand {
@@ -38,8 +36,8 @@ struct MenuScreenCommand {
 class MenuScreen
 {
 public:
-    MenuScreen(IDisplay* display)
-        : display(display)
+    MenuScreen(IDisplay* display, MenuContent* menuContent)
+        : display(display), menuContent(menuContent)
     {
         commandQueue = xQueueCreate(4, sizeof(MenuScreenCommand));
         xTaskCreate(TaskLoop, "MenuScreenTask", 2048, this, tskIDLE_PRIORITY + 1, nullptr);
@@ -59,21 +57,9 @@ public:
         SendCommand(cmd);
     }
 
-    void SetItems(MenuItem* items) {
-        MenuScreenCommand cmd = { MenuScreenCommandType::SetItems };
-        cmd.items.items = items;
-        SendCommand(cmd);
-    }
-
     void SetHeader(const char* text) {
         MenuScreenCommand cmd = { MenuScreenCommandType::SetHeader };
         snprintf(cmd.headerText.text, sizeof(cmd.headerText.text), "%s", text);
-        SendCommand(cmd);
-    }
-
-    void SetCurrentItem(uint8_t index) {
-        MenuScreenCommand cmd = { MenuScreenCommandType::SetCurrentItem };
-        cmd.item.index = index;
         SendCommand(cmd);
     }
 
@@ -88,9 +74,7 @@ public:
 
 private:
     char header[21] = {0};
-    MenuItem* items = nullptr;
-    uint8_t currentItemIndex = 0;
-    MenuItem* currentItem = nullptr;
+    MenuContent* menuContent = nullptr;
 
 private:
     IDisplay* display;

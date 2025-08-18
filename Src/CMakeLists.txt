@@ -44,6 +44,7 @@ add_executable(${NAME}
         ./Drivers/RotaryEncoder.cpp
         ./UserInterface/MainScreen.cpp
         ./UserInterface/MenuScreen.cpp
+        ./UserInterface/MenuContent.cpp
         ./UserInterface/MenuLogic/MenuController.cpp
         )
 
