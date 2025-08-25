@@ -19,6 +19,11 @@
 #include "../UserInterface/MenuLogic/MenuEvent.h"
 #include "../UserInterface/MenuLogic/MenuController.hpp"
 
+#include "../UserInterface/MenuPages/IPage.hpp"
+#include "../UserInterface/MenuPages/PageForDate.hpp"
+#include "../UserInterface/MenuPages/PageForTime.hpp"
+#include "../UserInterface/MenuPages/PageForAlrm.hpp"
+#include "../UserInterface/MenuPages/PageForRely.hpp"
 
 struct UiTaskContext {
     QueueHandle_t queue;
@@ -212,32 +217,32 @@ int main() {
     HD44780 lcd(0x27); // This address is common for many I2C LCDs, but it may vary.
     lcd.Init();
     lcd.Clear();
+    Display display(&lcd);
 
     MenuContent menuContent;
 
     {
         int i = 0;
 
-        MenuItem miClockDate = MenuItem(i++, MenuItemType::Date, "Clock Date", "Set Clock Date",
-        nullptr);
+        MenuItem miClockDate = MenuItem(i++, MenuItemType::Date, "Clock Date", "Set Clock Date");
+        miClockDate.SetPage(new PageForDate(&display, 1, 4, miClockDate.GetHeader()));
 
-        MenuItem miClockTime = MenuItem(i++, MenuItemType::Time, "Clock Time", "Set Clock Time",
-        nullptr);
+        MenuItem miClockTime = MenuItem(i++, MenuItemType::Time, "Clock Time", "Set Clock Time");
+        miClockTime.SetPage(new PageForTime(&display, 1, 4, miClockTime.GetHeader()));
 
-        MenuItem miAlarmTime = MenuItem(i++, MenuItemType::AlarmTime, "Alarm Time", "Set Alarm Time",
-        nullptr);
+        MenuItem miAlarmTime = MenuItem(i++, MenuItemType::AlarmTime, "Alarm Time", "Set Alarm Time");
+        miAlarmTime.SetPage(new PageForTime(&display, 1, 4, miAlarmTime.GetHeader(), PageForTimeMode::WithoutSeconds));
 
-        MenuItem miAlarmCfg = MenuItem(i++, MenuItemType::AlarmConfig, "Alarm Config", "Configure Alarm",
-        nullptr);
+        MenuItem miAlarmCfg = MenuItem(i++, MenuItemType::AlarmConfig, "Alarm Config", "Configure Alarm");
+        miAlarmCfg.SetPage(new PageForAlrm(&display, 1, 2, miAlarmCfg.GetHeader()));
 
-        MenuItem miRelay = MenuItem(i++, MenuItemType::Relay, "Relay", "Set Relay Time",
-        nullptr);
+        MenuItem miRelay = MenuItem(i++, MenuItemType::Relay, "Relay", "Set Relay Time");
+        miRelay.SetPage(new PageForRelay(&display, 1, 2, miRelay.GetHeader()));
 
-        MenuItem miSystem = MenuItem(i++, MenuItemType::System, "System", "Configure System",
-        nullptr);
+        MenuItem miSystem = MenuItem(i++, MenuItemType::System, "System", "Configure System");
 
-        MenuItem miExit = MenuItem(i++, MenuItemType::Exit, "Exit", "Exit Menu",
-        nullptr);
+        MenuItem miExit = MenuItem(i++, MenuItemType::Exit, "Exit", "Exit Menu");
+        miExit.SetPage(nullptr);
 
         MenuItem *menuItems = new MenuItem[7]
         {
@@ -253,7 +258,6 @@ int main() {
         menuContent.Init(menuItems);
     }
 
-    Display display(&lcd);
     MainScreen mainScreen(&display);
     MenuScreen menuScreen(&display, &menuContent);
 

@@ -17,6 +17,9 @@ enum class MenuItemType {
 class MenuItem
 {
 public:
+MenuItem(int index, MenuItemType type, const char* name, const char* header)
+            : index(index), type(type), name(name), header(header), page(nullptr) {}
+
         MenuItem(int index, MenuItemType type, const char* name, const char* header, IPage* page)
             : index(index), type(type), name(name), header(header), page(page) {}
 
