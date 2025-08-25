@@ -5,8 +5,22 @@
 
 class MenuContent {
 public:
-    MenuContent(void);
-    ~MenuContent();
+    MenuContent(void){}
+    ~MenuContent(){
+        delete[] menuItems;
+    }
+
+    void Init(MenuItem *menuItems)
+    {
+        this->menuItems = menuItems;
+        count = static_cast<int>(MenuItemType::Count);
+
+        // Initialize the current menu item 
+        // to the "Exit" item to let user
+        // easily exit the menu in case
+        // he entered it by mistake
+        SetCurrentItem(&menuItems[6]);
+    }
 
 
     void SetCurrentItem(MenuItem* item) {

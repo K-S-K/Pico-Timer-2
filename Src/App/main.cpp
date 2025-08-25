@@ -215,6 +215,44 @@ int main() {
 
     MenuContent menuContent;
 
+    {
+        int i = 0;
+
+        MenuItem miClockDate = MenuItem(i++, MenuItemType::Date, "Clock Date", "Set Clock Date",
+        nullptr);
+
+        MenuItem miClockTime = MenuItem(i++, MenuItemType::Time, "Clock Time", "Set Clock Time",
+        nullptr);
+
+        MenuItem miAlarmTime = MenuItem(i++, MenuItemType::AlarmTime, "Alarm Time", "Set Alarm Time",
+        nullptr);
+
+        MenuItem miAlarmCfg = MenuItem(i++, MenuItemType::AlarmConfig, "Alarm Config", "Configure Alarm",
+        nullptr);
+
+        MenuItem miRelay = MenuItem(i++, MenuItemType::Relay, "Relay", "Set Relay Time",
+        nullptr);
+
+        MenuItem miSystem = MenuItem(i++, MenuItemType::System, "System", "Configure System",
+        nullptr);
+
+        MenuItem miExit = MenuItem(i++, MenuItemType::Exit, "Exit", "Exit Menu",
+        nullptr);
+
+        MenuItem *menuItems = new MenuItem[7]
+        {
+            miClockDate,
+            miClockTime,
+            miAlarmTime,
+            miAlarmCfg,
+            miRelay,
+            miSystem,
+            miExit
+        };
+
+        menuContent.Init(menuItems);
+    }
+
     Display display(&lcd);
     MainScreen mainScreen(&display);
     MenuScreen menuScreen(&display, &menuContent);
