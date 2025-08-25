@@ -10,9 +10,8 @@
 class PageForAlrm : public EmptyPage
 {
     public:
-    PageForAlrm(IDisplay* display, int row, int col, int seconds, bool enabled, const char* headerText)
-    : EmptyPage(display, row, col, headerText),
-      seconds(seconds), enabled(enabled)
+    PageForAlrm(IDisplay* display, int row, int col, const char* headerText)
+    : EmptyPage(display, row, col, headerText)
     {
         elements = new InputElement*[3]; // 2 editable fields + Cancel/Apply
         int i = 0;

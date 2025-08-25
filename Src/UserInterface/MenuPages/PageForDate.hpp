@@ -10,11 +10,9 @@
 class PageForDate : public EmptyPage
 {
     public:
-    PageForDate(IDisplay* display, int row, int col, DateTime valueIn, const char* headerText)
+    PageForDate(IDisplay* display, int row, int col, const char* headerText)
     : EmptyPage(display, row, col, headerText)
     {
-        currentValue.CopyFrom(valueIn);
-
         elements = new InputElement*[5]; // 3 editable fields + Cancel/Apply
         int i = 0;
         elements[i++] = new InputElement(display, 3, 0, InputElementType::Cancel);
@@ -38,7 +36,12 @@ class PageForDate : public EmptyPage
         RenderElements();
     }
 
-    void GetCurrentTime(DateTime& outTime)
+    void SetCurrentDate(const DateTime& newTime)
+    {
+        currentValue.CopyFrom(newTime);
+    }
+
+    void GetCurrentDate(DateTime& outTime)
     {
         outTime.CopyFrom(currentValue);
     }

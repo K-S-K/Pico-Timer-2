@@ -73,11 +73,12 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = menuContent->currentItem->GetPage();
                         if(page == nullptr)
                         {
-                            DateTime value;
-                            clock->GetCurrentTime(value);
-                            page = new PageForDate(display, 1, 4, value, menuContent->currentItem->GetHeader());
+                            page = new PageForDate(display, 1, 4, menuContent->currentItem->GetHeader());
                             menuContent->currentItem->SetPage(page);
                         }
+                        DateTime value;
+                        clock->GetCurrentTime(value);
+                        (static_cast<PageForDate*>(page))->SetCurrentDate(value);
                         page->PrepareDisplay();
                         page->Render();
                     }
@@ -86,11 +87,12 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = menuContent->currentItem->GetPage();
                         if(page == nullptr)
                         {
-                            DateTime value;
-                            clock->GetCurrentTime(value);
-                            page = new PageForTime(display, 1, 4, value, menuContent->currentItem->GetHeader());
+                            page = new PageForTime(display, 1, 4, menuContent->currentItem->GetHeader());
                             menuContent->currentItem->SetPage(page);
                         }
+                        DateTime value;
+                        clock->GetCurrentTime(value);
+                        (static_cast<PageForTime*>(page))->SetCurrentTime(value);
                         page->PrepareDisplay();
                         page->Render();
                     }
@@ -99,11 +101,12 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = menuContent->currentItem->GetPage();
                         if(page == nullptr)
                         {
-                            AlarmConfig alarmConfig;
-                            alarm->GetAlarmConfig(alarmConfig);
-                            page = new PageForTime(display, 1, 4, alarmConfig.timeBeg, menuContent->currentItem->GetHeader(), PageForTimeMode::WithoutSeconds);
+                            page = new PageForTime(display, 1, 4, menuContent->currentItem->GetHeader(), PageForTimeMode::WithoutSeconds);
                             menuContent->currentItem->SetPage(page);
                         }
+                        AlarmConfig alarmConfig;
+                        alarm->GetAlarmConfig(alarmConfig);
+                        (static_cast<PageForTime*>(page))->SetCurrentTime(alarmConfig.timeBeg);
                         page->PrepareDisplay();
                         page->Render();
                     }
@@ -112,11 +115,12 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = menuContent->currentItem->GetPage();
                         if(page == nullptr)
                         {
-                            AlarmConfig alarmConfig;
-                            alarm->GetAlarmConfig(alarmConfig);
-                            page = new PageForAlrm(display, 1, 2, alarmConfig.duration, alarmConfig.enabled, menuContent->currentItem->GetHeader());
+                            page = new PageForAlrm(display, 1, 2, menuContent->currentItem->GetHeader());
                             menuContent->currentItem->SetPage(page);
                         }
+                        AlarmConfig alarmConfig;
+                        alarm->GetAlarmConfig(alarmConfig);
+                        (static_cast<PageForAlrm*>(page))->GetCurrentState(alarmConfig.duration, alarmConfig.enabled);
                         page->PrepareDisplay();
                         page->Render();
                     }
@@ -125,11 +129,12 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = menuContent->currentItem->GetPage();
                         if(page == nullptr)
                         {
-                            RelayConfig relayConfig;
-                            relay->GetRelayConfig(relayConfig);
-                            page = new PageForRelay(display, 1, 2, relayConfig.timeBeg, relayConfig.timeEnd, menuContent->currentItem->GetHeader());
+                            page = new PageForRelay(display, 1, 2, menuContent->currentItem->GetHeader());
                             menuContent->currentItem->SetPage(page);
                         }
+                        RelayConfig relayConfig;
+                        relay->GetRelayConfig(relayConfig);
+                        (static_cast<PageForRelay*>(page))->SetRelayTimes(relayConfig.timeBeg, relayConfig.timeEnd);
                         page->PrepareDisplay();
                         page->Render();
                     }
@@ -161,7 +166,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                                     DateTime clockValue;
                                     clock->GetCurrentTime(clockValue);
                                     DateTime editorValue;
-                                    ((PageForDate*)(page))->GetCurrentTime(editorValue);
+                                    ((PageForDate*)(page))->GetCurrentDate(editorValue);
                                     clockValue.CopyDateFrom(editorValue);
 
                                     // Apply the changes to the clock

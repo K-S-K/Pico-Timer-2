@@ -14,11 +14,9 @@ enum class PageForTimeMode {
 class PageForTime : public EmptyPage
 {
     public:
-    PageForTime(IDisplay* display, int row, int col, DateTime valueIn, const char* headerText, PageForTimeMode mode = PageForTimeMode::WithSeconds)
+    PageForTime(IDisplay* display, int row, int col, const char* headerText, PageForTimeMode mode = PageForTimeMode::WithSeconds)
     : EmptyPage(display, row, col, headerText), mode(mode)
     {
-        currentValue.CopyFrom(valueIn);
-
         int elementsCount = 
             mode == PageForTimeMode::WithSeconds ? 5 : 
             mode == PageForTimeMode::WithoutSeconds ? 4 :
@@ -63,6 +61,11 @@ class PageForTime : public EmptyPage
 
         // Render the cursor and options
         RenderElements();
+    }
+
+    void SetCurrentTime(const DateTime& newTime)
+    {
+        currentValue.CopyFrom(newTime);
     }
 
     void GetCurrentTime(DateTime& outTime)

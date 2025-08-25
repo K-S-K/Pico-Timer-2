@@ -9,13 +9,9 @@
 class PageForRelay : public EmptyPage
 {
     public:
-    PageForRelay(IDisplay* display, int row, int col, 
-        DateTime tOn, DateTime tOff, const char* headerText)
+    PageForRelay(IDisplay* display, int row, int col, const char* headerText)
     : EmptyPage(display, row, col, headerText)
     {
-        timeOn.CopyFrom(tOn);
-        timeOff.CopyFrom(tOff);
-
         elements = new InputElement*[6]; // 4 editable fields + Cancel/Apply
         int i = 0;
         elements[i++] = new InputElement(display, 3, 0, InputElementType::Cancel);
