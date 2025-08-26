@@ -228,7 +228,7 @@ int main() {
         miClockDate.SetPage(new PageForDate(&display, 1, 4, miClockDate.GetHeader()));
 
         MenuItem miClockTime = MenuItem(i++, MenuItemType::Time, "Clock Time", "Set Clock Time");
-        miClockTime.SetPage(new PageForTime(&display, 1, 4, miClockTime.GetHeader()));
+        miClockTime.SetPage(new PageForTime(&display, 1, 4, miClockTime.GetHeader(), PageForTimeMode::WithSeconds));
 
         MenuItem miAlarmTime = MenuItem(i++, MenuItemType::AlarmTime, "Alarm Time", "Set Alarm Time");
         miAlarmTime.SetPage(new PageForTime(&display, 1, 4, miAlarmTime.GetHeader(), PageForTimeMode::WithoutSeconds));

@@ -14,7 +14,7 @@ enum class PageForTimeMode {
 class PageForTime : public EmptyPage
 {
     public:
-    PageForTime(IDisplay* display, int row, int col, const char* headerText, PageForTimeMode mode = PageForTimeMode::WithSeconds)
+    PageForTime(IDisplay* display, int row, int col, const char* headerText, PageForTimeMode mode)
     : EmptyPage(display, row, col, headerText), mode(mode)
     {
         int elementsCount = 

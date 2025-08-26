@@ -73,6 +73,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = menuContent->currentItem->GetPage();
                         if(page != nullptr)
                         {
+                            page->UpdatePage();
                             DateTime value;
                             clock->GetCurrentTime(value);
                             (static_cast<PageForDate*>(page))->SetCurrentDate(value);
@@ -85,6 +86,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = menuContent->currentItem->GetPage();
                         if(page != nullptr)
                         {
+                            page->UpdatePage();
                             DateTime value;
                             clock->GetCurrentTime(value);
                             (static_cast<PageForTime*>(page))->SetCurrentTime(value);
@@ -102,6 +104,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = menuContent->currentItem->GetPage();
                         if(page != nullptr)
                         {
+                            page->UpdatePage();
                             AlarmConfig alarmConfig;
                             alarm->GetAlarmConfig(alarmConfig);
                             (static_cast<PageForTime*>(page))->SetCurrentTime(alarmConfig.timeBeg);
@@ -114,6 +117,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = menuContent->currentItem->GetPage();
                         if(page != nullptr)
                         {
+                            page->UpdatePage();
                             AlarmConfig alarmConfig;
                             alarm->GetAlarmConfig(alarmConfig);
                             (static_cast<PageForAlrm*>(page))->GetCurrentState(alarmConfig.duration, alarmConfig.enabled);
@@ -126,6 +130,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                         IPage *page = menuContent->currentItem->GetPage();
                         if(page != nullptr)
                         {
+                            page->UpdatePage();
                             RelayConfig relayConfig;
                             relay->GetRelayConfig(relayConfig);
                             (static_cast<PageForRelay*>(page))->SetRelayTimes(relayConfig.timeBeg, relayConfig.timeEnd);
@@ -158,14 +163,15 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             }
                             if(result == EventProcessingResult::Apply)
                             {
-                                    DateTime clockValue;
-                                    clock->GetCurrentTime(clockValue);
-                                    DateTime editorValue;
-                                    ((PageForDate*)(page))->GetCurrentDate(editorValue);
-                                    clockValue.CopyDateFrom(editorValue);
+                                DateTime clockValue;
+                                clock->GetCurrentTime(clockValue);
+                                DateTime editorValue;
+                                ((PageForDate*)(page))->GetCurrentDate(editorValue);
+                                clockValue.CopyDateFrom(editorValue);
 
-                                    // Apply the changes to the clock
-                                    clock->SetCurrentTime(clockValue);
+                                // Apply the changes to the clock
+                                clock->SetCurrentTime(clockValue);
+                                page->UpdateData();
                             }
                             menuState = MenuState::MenuScreen;
                             display->Clear();
@@ -184,14 +190,15 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             }
                             if(result == EventProcessingResult::Apply)
                             {
-                                    DateTime clockValue;
-                                    clock->GetCurrentTime(clockValue);
-                                    DateTime editorValue;
-                                    ((PageForTime*)(page))->GetCurrentTime(editorValue);
-                                    clockValue.CopyTimeFrom(editorValue);
+                                DateTime clockValue;
+                                clock->GetCurrentTime(clockValue);
+                                DateTime editorValue;
+                                ((PageForTime*)(page))->GetCurrentTime(editorValue);
+                                clockValue.CopyTimeFrom(editorValue);
 
-                                    // Apply the changes to the clock
-                                    clock->SetCurrentTime(clockValue);
+                                // Apply the changes to the clock
+                                clock->SetCurrentTime(clockValue);
+                                page->UpdateData();
                             }
                             menuState = MenuState::MenuScreen;
                             display->Clear();
@@ -210,14 +217,15 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             }
                             if(result == EventProcessingResult::Apply)
                             {
-                                    AlarmConfig alarmConfig;
-                                    alarm->GetAlarmConfig(alarmConfig);
-                                    DateTime editorValue;
-                                    ((PageForTime*)(page))->GetCurrentTime(editorValue);
-                                    alarmConfig.timeBeg.CopyTimeFrom(editorValue);
+                                AlarmConfig alarmConfig;
+                                alarm->GetAlarmConfig(alarmConfig);
+                                DateTime editorValue;
+                                ((PageForTime*)(page))->GetCurrentTime(editorValue);
+                                alarmConfig.timeBeg.CopyTimeFrom(editorValue);
 
-                                    // Apply the changes to the clock
-                                    alarm->SetAlarmConfig(alarmConfig);
+                                // Apply the changes to the clock
+                                alarm->SetAlarmConfig(alarmConfig);
+                                page->UpdateData();
                             }
                             menuState = MenuState::MenuScreen;
                             display->Clear();
@@ -236,15 +244,16 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             }
                             if(result == EventProcessingResult::Apply)
                             {
-                                    bool enabled;
-                                    int seconds;
-                                    AlarmConfig alarmConfig;
-                                    alarm->GetAlarmConfig(alarmConfig);
-                                    ((PageForAlrm*)(page))->GetCurrentState(seconds, enabled);
-                                    alarmConfig.duration = seconds;
-                                    alarmConfig.enabled = enabled;
-                                    // Apply the changes to the clock
-                                    alarm->SetAlarmConfig(alarmConfig);
+                                bool enabled;
+                                int seconds;
+                                AlarmConfig alarmConfig;
+                                alarm->GetAlarmConfig(alarmConfig);
+                                ((PageForAlrm*)(page))->GetCurrentState(seconds, enabled);
+                                alarmConfig.duration = seconds;
+                                alarmConfig.enabled = enabled;
+                                // Apply the changes to the clock
+                                alarm->SetAlarmConfig(alarmConfig);
+                                page->UpdateData();
                             }
                             menuState = MenuState::MenuScreen;
                             display->Clear();
@@ -263,11 +272,12 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                             }
                             if(result == EventProcessingResult::Apply)
                             {
-                                    RelayConfig relayConfig;
-                                    relay->GetRelayConfig(relayConfig);
-                                    ((PageForRelay*)(page))->GetRelayTimes(relayConfig.timeBeg, relayConfig.timeEnd);
-                                    // Apply the changes to the clock
-                                    relay->SetRelayConfig(relayConfig);
+                                RelayConfig relayConfig;
+                                relay->GetRelayConfig(relayConfig);
+                                ((PageForRelay*)(page))->GetRelayTimes(relayConfig.timeBeg, relayConfig.timeEnd);
+                                // Apply the changes to the clock
+                                relay->SetRelayConfig(relayConfig);
+                                page->UpdateData();
                             }
                             menuState = MenuState::MenuScreen;
                             display->Clear();
