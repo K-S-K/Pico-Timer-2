@@ -88,7 +88,7 @@ public:
     void SetAlarmConfig(const AlarmConfig& config, bool render = false) {
         MainScreenCommand cmd = {};
         cmd.type = MainScreenCommandType::SetAlarmConfig;
-        cmd.alarmConfig.CopyDateFrom(config);
+        cmd.alarmConfig.CopyTimeFrom(config);
         cmd.render = render;
         xQueueSend(commandQueue, &cmd, portMAX_DELAY);
     }

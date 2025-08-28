@@ -37,7 +37,7 @@ void Clock::TaskLoop(void* param) {
 }
 
 void Clock::Tick() {
-    // === Time Incrementation ===
+    // === Time Increment ===
     currentTime.IncrementSeconds();
 
     // === Normal Tick Event ===
@@ -48,6 +48,6 @@ void Clock::Tick() {
 void Clock::Pause() { running = false; }
 void Clock::Resume() { running = true; }
 
-void Clock::SetCurrentTime(const DateTime& newTime) { currentTime = newTime; }
-void Clock::GetCurrentTime(DateTime& outTime) { outTime.CopyFrom(currentTime); }
+void Clock::SetTime(const DateTime& newTime) { currentTime = newTime; }
+void Clock::GetTime(DateTime& outTime) { outTime.CopyFrom(currentTime); }
 QueueHandle_t Clock::GetEventQueue() const { return outQueue; }

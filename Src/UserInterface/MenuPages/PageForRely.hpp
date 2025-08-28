@@ -6,11 +6,14 @@
 #include "InputElement.hpp"
 #include "EmptyPage.hpp"
 
+#include "../Clock/Relay.hpp"
+
+
 class PageForRelay : public EmptyPage
 {
     public:
-    PageForRelay(IDisplay* display, int row, int col, const char* headerText)
-    : EmptyPage(display, row, col, headerText)
+    PageForRelay(Relay* relay, IDisplay* display, int row, int col, const char* headerText)
+    : EmptyPage(display, row, col, headerText), relay(relay)
     {
         elements = new InputElement*[6]; // 4 editable fields + Cancel/Apply
         int i = 0;
@@ -25,6 +28,28 @@ class PageForRelay : public EmptyPage
     }
 
     virtual ~PageForRelay() {}
+
+    virtual void UpdatePage()
+    {
+        RelayConfig relayConfig;
+        relay->GetRelayConfig(relayConfig);
+
+        timeOn = relayConfig.timeBeg;
+        timeOff = relayConfig.timeEnd;
+        PrepareDisplay();
+        Render();
+    }
+
+    virtual void UpdateData() override
+    {
+        RelayConfig relayConfig;
+        relay->GetRelayConfig(relayConfig);
+
+        relayConfig.timeBeg = timeOn;
+        relayConfig.timeEnd = timeOff;
+
+        relay->SetRelayConfig(relayConfig);
+    }
 
     void Render()
     {
@@ -146,4 +171,5 @@ class PageForRelay : public EmptyPage
 
     DateTime timeOn;
     DateTime timeOff;
+    Relay* relay = nullptr;
 };

@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include "DateTime.h"
 
+#include "IDateTimeIO.hpp"
+
 struct AlarmState {
     bool ringing = false; // True if the alarm is currently ringing
 
@@ -31,7 +33,7 @@ struct AlarmConfig {
         timeEnd.AddSeconds(duration);
     }
 
-    void CopyDateFrom(const AlarmConfig& other) {
+    void CopyTimeFrom(const AlarmConfig& other) {
         timeBeg.CopyTimeFrom(other.timeBeg);
         duration = other.duration;
         enabled = other.enabled;
@@ -51,20 +53,34 @@ struct AlarmEvent {
     AlarmConfig config; // Current configuration of the alarm
 };
 
-class Alarm {
+class Alarm : public IDateTimeIO {
 public:
     Alarm(int qLength);
 
     void ProcessCurrentTime(const DateTime& time);
 
+    void SetTime(const DateTime& newTime)
+    {
+        AlarmConfig alarmConfig;
+        GetAlarmConfig(alarmConfig);
+        alarmConfig.timeBeg.CopyTimeFrom(newTime);
+        SetAlarmConfig(alarmConfig);
+    }
+
+    void GetTime(DateTime& outTime)
+    {
+        outTime.hour = config.timeBeg.hour;
+        outTime.minute = config.timeBeg.minute;
+    }
+
     void SetAlarmConfig(const AlarmConfig& newConfig) {
-        config.CopyDateFrom(newConfig);
+        config.CopyTimeFrom(newConfig);
         AlarmEvent evt{AlarmEventType::Reconfigured, state, config};
         xQueueSend(outQueue, &evt, 0);
     }
 
     void GetAlarmConfig(AlarmConfig& outConfig) const {
-        outConfig.CopyDateFrom(config);
+        outConfig.CopyTimeFrom(config);
     }
 
     void GetAlarmState(AlarmState& outState) const {
