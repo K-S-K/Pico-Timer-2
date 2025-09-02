@@ -3,7 +3,6 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 
-#include "../Display/IDisplay.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 #include "../UserInterface/MenuScreen.hpp"
 
@@ -18,7 +17,7 @@ enum class MenuState {
 
 class MenuController {
 public:
-    MenuController(MenuScreen* menuScreen, IDisplay* display, MenuContent* menuContent);
+    MenuController(MenuScreen* menuScreen);
     void ProcessEvent(MenuEvent event);
     MenuState GetMenuState() const { return menuState; }
 
@@ -39,9 +38,10 @@ private:
         menuContent->SelectPrevItem();
     }
 
+
+private:
     MenuState menuState = MenuState::MainScreen;
 
-    IDisplay* display = nullptr;
     MenuScreen* menuScreen = nullptr;
     MenuContent* menuContent = nullptr;
 };

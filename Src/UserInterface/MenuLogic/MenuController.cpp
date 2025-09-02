@@ -2,18 +2,12 @@
 #include <cstdio>
 
 #include "MenuController.hpp"
-#include "../Display/Display.hpp"
-#include "../Drivers/RotaryEncoder.hpp"
-
 #include "../MenuPages/IPage.hpp"
-#include "../MenuPages/PageForDate.hpp"
-#include "../MenuPages/PageForTime.hpp"
-#include "../MenuPages/PageForAlrm.hpp"
-#include "../MenuPages/PageForRely.hpp"
 
-MenuController::MenuController(MenuScreen* menuScreen, IDisplay* display, MenuContent* menuContent)
-    : menuScreen(menuScreen), display(display), menuContent(menuContent)
+MenuController::MenuController(MenuScreen* menuScreen)
+    : menuScreen(menuScreen)
     {
+        menuContent = menuScreen->GetMenuContent();
 
         // Initialize the menu screen
         menuScreen->SetHeader("Menu");
@@ -29,8 +23,8 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
         case MenuState::MainScreen:
             // In the main screen, we only handle the push button event to enter the menu
             if (event == MenuEvent::PushButton) {
-                // Clear the display before entering the menu
-                display->Clear();
+                // Clear the screen before entering the menu
+                menuScreen->Clear();
 
                 // Switch to the menu mode
                 menuState = MenuState::MenuScreen;
@@ -63,9 +57,9 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                     // If the user pressed the Exit button, we return to the main screen
                     menuState = MenuState::MainScreen;
 
-                    // Clear the display to avoid showing the 
+                    // Clear the screen to avoid showing the 
                     // rest elements of the menu after exiting it
-                    display->Clear();
+                    menuScreen->Clear();
                 }
                 else
                 {
@@ -136,7 +130,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                                 page->UpdateData();
                             }
                             menuState = MenuState::MenuScreen;
-                            display->Clear();
+                            menuScreen->Clear();
                         }
                     }
 
@@ -155,7 +149,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                                 page->UpdateData();
                             }
                             menuState = MenuState::MenuScreen;
-                            display->Clear();
+                            menuScreen->Clear();
                         }
                     }
 
@@ -174,7 +168,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                                 page->UpdateData();
                             }
                             menuState = MenuState::MenuScreen;
-                            display->Clear();
+                            menuScreen->Clear();
                         }
                     }
 
@@ -193,7 +187,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                                 page->UpdateData();
                             }
                             menuState = MenuState::MenuScreen;
-                            display->Clear();
+                            menuScreen->Clear();
                         }
                     }
 
@@ -212,7 +206,7 @@ void MenuController::ProcessMenuEvent(MenuEvent event) {
                                 page->UpdateData();
                             }
                             menuState = MenuState::MenuScreen;
-                            display->Clear();
+                            menuScreen->Clear();
                         }
                     }
 

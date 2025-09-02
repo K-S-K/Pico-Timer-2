@@ -63,6 +63,10 @@ public:
         SendCommand(cmd);
     }
 
+    MenuContent* GetMenuContent() const {
+        return menuContent;
+    }
+
     private:
     QueueHandle_t commandQueue;
     static void TaskLoop(void* param);
