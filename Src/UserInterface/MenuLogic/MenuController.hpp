@@ -3,10 +3,6 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 
-#include "../Clock/Clock.hpp"
-#include "../Clock/Alarm.hpp"
-#include "../Clock/Relay.hpp"
-#include "../Display/IDisplay.hpp"
 #include "../Drivers/RotaryEncoder.hpp"
 #include "../UserInterface/MenuScreen.hpp"
 
@@ -21,7 +17,7 @@ enum class MenuState {
 
 class MenuController {
 public:
-    MenuController(Clock* clock, Alarm* alarm, Relay* relay, MenuScreen* menuScreen, IDisplay* display, MenuContent* menuContent);
+    MenuController(MenuScreen* menuScreen);
     void ProcessEvent(MenuEvent event);
     MenuState GetMenuState() const { return menuState; }
 
@@ -42,12 +38,10 @@ private:
         menuContent->SelectPrevItem();
     }
 
+
+private:
     MenuState menuState = MenuState::MainScreen;
 
-    Clock* clock = nullptr;
-    Alarm* alarm = nullptr;
-    Relay* relay = nullptr;
-    IDisplay* display = nullptr;
     MenuScreen* menuScreen = nullptr;
     MenuContent* menuContent = nullptr;
 };

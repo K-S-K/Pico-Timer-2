@@ -18,6 +18,8 @@
 #include <stdint.h>
 #include "DateTime.h"
 
+#include "IDateTimeIO.hpp"
+
 enum class ClockEventType {
     Tick,
 };
@@ -27,16 +29,16 @@ struct ClockEvent {
     DateTime currentTime;
 };
 
-class Clock {
+class Clock : public IDateTimeIO {
 public:
     Clock(int qLength = 4);
 
     void Resume(); // resumes ticking
     void Pause();  // pauses ticking
 
-    void SetCurrentTime(const DateTime& newTime);
-
-    void GetCurrentTime(DateTime& outTime);
+    // IDateTimeIO interface
+    void SetTime(const DateTime& newTime) ;
+    void GetTime(DateTime& outTime) ;
 
     void Start();  // create the task
 

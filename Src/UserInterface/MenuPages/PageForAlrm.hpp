@@ -6,13 +6,14 @@
 #include "InputElement.hpp"
 #include "EmptyPage.hpp"
 
+#include "../Clock/Alarm.hpp"
+
 
 class PageForAlrm : public EmptyPage
 {
     public:
-    PageForAlrm(IDisplay* display, int row, int col, int seconds, bool enabled, const char* headerText)
-    : EmptyPage(display, row, col, headerText),
-      seconds(seconds), enabled(enabled)
+    PageForAlrm(Alarm* alarm, IDisplay* display, int row, int col, const char* headerText)
+    : EmptyPage(display, row, col, headerText), alarm(alarm)
     {
         elements = new InputElement*[3]; // 2 editable fields + Cancel/Apply
         int i = 0;
@@ -25,6 +26,30 @@ class PageForAlrm : public EmptyPage
     }
 
     virtual ~PageForAlrm() {}
+
+    virtual void UpdatePage()
+    {
+        AlarmConfig alarmConfig;
+        alarm->GetAlarmConfig(alarmConfig);
+
+        seconds = alarmConfig.duration;
+        enabled = alarmConfig.enabled;
+        PrepareDisplay();
+        Render();
+    }
+
+    virtual void UpdateData()
+    {
+        // Update the dtIO value with the currentValue
+        if (alarm != nullptr)
+        {
+            AlarmConfig alarmConfig;
+            alarm->GetAlarmConfig(alarmConfig);
+            alarmConfig.duration = seconds;
+            alarmConfig.enabled = enabled;
+            alarm->SetAlarmConfig(alarmConfig);
+        }
+    }
 
     void Render()
     {
@@ -109,4 +134,5 @@ class PageForAlrm : public EmptyPage
     private:
     int seconds;
     bool enabled;
+    Alarm* alarm = nullptr;
 };

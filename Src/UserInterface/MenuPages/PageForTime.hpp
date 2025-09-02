@@ -6,6 +6,8 @@
 #include "InputElement.hpp"
 #include "EmptyPage.hpp"
 
+#include "../Clock/IDateTimeIO.hpp"
+
 enum class PageForTimeMode {
     WithSeconds,
     WithoutSeconds,
@@ -14,11 +16,9 @@ enum class PageForTimeMode {
 class PageForTime : public EmptyPage
 {
     public:
-    PageForTime(IDisplay* display, int row, int col, DateTime valueIn, const char* headerText, PageForTimeMode mode = PageForTimeMode::WithSeconds)
-    : EmptyPage(display, row, col, headerText), mode(mode)
+    PageForTime(IDateTimeIO* dtIO, IDisplay* display, int row, int col, const char* headerText, PageForTimeMode mode)
+    : EmptyPage(display, row, col, headerText), dtIO(dtIO), mode(mode)
     {
-        currentValue.CopyFrom(valueIn);
-
         int elementsCount = 
             mode == PageForTimeMode::WithSeconds ? 5 : 
             mode == PageForTimeMode::WithoutSeconds ? 4 :
@@ -38,6 +38,29 @@ class PageForTime : public EmptyPage
     }
 
     virtual ~PageForTime() {}
+
+    virtual void UpdatePage()
+    {
+        // Fetch the current time from the dtIO
+        if (dtIO != nullptr)
+        {
+            dtIO->GetTime(currentValue);
+            PrepareDisplay();
+            Render();
+        }
+    }
+
+    virtual void UpdateData()
+    {
+        // Update the dtIO value from the currentValue
+        if (dtIO != nullptr)
+        {
+            DateTime value;
+            dtIO->GetTime(value);
+            value.CopyTimeFrom(currentValue);
+            dtIO->SetTime(value);
+        }
+    }
 
     void Render()
     {
@@ -63,6 +86,11 @@ class PageForTime : public EmptyPage
 
         // Render the cursor and options
         RenderElements();
+    }
+
+    void SetCurrentTime(const DateTime& newTime)
+    {
+        currentValue.CopyFrom(newTime);
     }
 
     void GetCurrentTime(DateTime& outTime)
@@ -143,4 +171,5 @@ class PageForTime : public EmptyPage
     PageForTimeMode mode = PageForTimeMode::WithSeconds; // Default mode with seconds
 
     DateTime currentValue;
+    IDateTimeIO* dtIO = nullptr;
 };

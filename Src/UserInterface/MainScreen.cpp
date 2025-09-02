@@ -58,7 +58,7 @@ void MainScreen::ProcessCommand(const MainScreenCommand& cmd)
         break;
 
         case MainScreenCommandType::SetAlarmConfig:
-        alarmConfig.CopyDateFrom(cmd.alarmConfig);
+        alarmConfig.CopyTimeFrom(cmd.alarmConfig);
         if (cmd.render) {
                 inner_Render();
         }

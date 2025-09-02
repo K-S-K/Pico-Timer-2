@@ -6,15 +6,14 @@
 #include "InputElement.hpp"
 #include "EmptyPage.hpp"
 
+#include "../Clock/IDateTimeIO.hpp"
 
 class PageForDate : public EmptyPage
 {
     public:
-    PageForDate(IDisplay* display, int row, int col, DateTime valueIn, const char* headerText)
-    : EmptyPage(display, row, col, headerText)
+    PageForDate(IDateTimeIO* dtIO, IDisplay* display, int row, int col, const char* headerText)
+    : EmptyPage(display, row, col, headerText), dtIO(dtIO)
     {
-        currentValue.CopyFrom(valueIn);
-
         elements = new InputElement*[5]; // 3 editable fields + Cancel/Apply
         int i = 0;
         elements[i++] = new InputElement(display, 3, 0, InputElementType::Cancel);
@@ -28,6 +27,29 @@ class PageForDate : public EmptyPage
     
     virtual ~PageForDate() {}
 
+    virtual void UpdatePage()
+    {
+        // Fetch the current date from the dtIO
+        if (dtIO != nullptr)
+        {
+            dtIO->GetTime(currentValue);
+            PrepareDisplay();
+            Render();
+        }
+    }
+
+    virtual void UpdateData()
+    {
+        // Update the dtIO value from the currentValue
+        if (dtIO != nullptr)
+        {
+            DateTime value;
+            dtIO->GetTime(value);
+            value.CopyDateFrom(currentValue);
+            dtIO->SetTime(value);
+        }
+    }
+
     void Render()
     {
         char buffer[32];
@@ -38,7 +60,12 @@ class PageForDate : public EmptyPage
         RenderElements();
     }
 
-    void GetCurrentTime(DateTime& outTime)
+    void SetCurrentDate(const DateTime& newTime)
+    {
+        currentValue.CopyFrom(newTime);
+    }
+
+    void GetCurrentDate(DateTime& outTime)
     {
         outTime.CopyFrom(currentValue);
     }
@@ -106,4 +133,5 @@ class PageForDate : public EmptyPage
     }
 
     DateTime currentValue;
+    IDateTimeIO* dtIO = nullptr;
 };

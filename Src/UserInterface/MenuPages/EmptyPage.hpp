@@ -20,9 +20,13 @@ EmptyPage(IDisplay* display, int row, int col, const char* headerText)
         delete[] elements;
     }
 
+    virtual void UpdatePage(){}
+    virtual void UpdateData(){}
+
     void PrepareDisplay()
     {
         display->Clear();
+        CurrentElementIndex = 0;
         display->PrintLine(0, 0, headerText);
     }
 

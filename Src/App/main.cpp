@@ -19,6 +19,11 @@
 #include "../UserInterface/MenuLogic/MenuEvent.h"
 #include "../UserInterface/MenuLogic/MenuController.hpp"
 
+#include "../UserInterface/MenuPages/IPage.hpp"
+#include "../UserInterface/MenuPages/PageForDate.hpp"
+#include "../UserInterface/MenuPages/PageForTime.hpp"
+#include "../UserInterface/MenuPages/PageForAlrm.hpp"
+#include "../UserInterface/MenuPages/PageForRely.hpp"
 
 struct UiTaskContext {
     QueueHandle_t queue;
@@ -207,25 +212,19 @@ void SystemThermoTask(void* param) {
 int main() {
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
-
-
+    
     HD44780 lcd(0x27); // This address is common for many I2C LCDs, but it may vary.
     lcd.Init();
     lcd.Clear();
-
-    MenuContent menuContent;
-
     Display display(&lcd);
+
+    // Create Clock instance
+    Clock clock(4); // static so it persists
+
+    // Optional: initialize time and alarm
+    clock.SetTime({2025, 6, 19, 11, 59, 55});
+
     MainScreen mainScreen(&display);
-    MenuScreen menuScreen(&display, &menuContent);
-
-    RotaryEncoder encoder(14, 15, 13);
-    encoder.Init();
-
-    PiezoSound sound(8);
-
-    // LED pin, Alarm control pin, Relay control pin
-    GPIOControl gpio(PICO_DEFAULT_LED_PIN, 6, 9);
 
     // Create Alarm instance
     Alarm alarm(4);
@@ -255,16 +254,59 @@ int main() {
         mainScreen.SetRelayConfig(relayConfig, false);
     }
 
-    // Create Clock instance
-    Clock clock(4); // static so it persists
 
-    // Optional: initialize time and alarm
-    clock.SetCurrentTime({2025, 6, 19, 11, 59, 55});
+    MenuContent menuContent;
+    {
+        int i = 0;
+
+        MenuItem miClockDate = MenuItem(i++, MenuItemType::Date, "Clock Date", "Set Clock Date");
+        miClockDate.SetPage(new PageForDate(&clock, &display, 1, 4, miClockDate.GetHeader()));
+
+        MenuItem miClockTime = MenuItem(i++, MenuItemType::Time, "Clock Time", "Set Clock Time");
+        miClockTime.SetPage(new PageForTime(&clock, &display, 1, 4, miClockTime.GetHeader(), PageForTimeMode::WithSeconds));
+
+        MenuItem miAlarmTime = MenuItem(i++, MenuItemType::AlarmTime, "Alarm Time", "Set Alarm Time");
+        miAlarmTime.SetPage(new PageForTime(&alarm, &display, 1, 4, miAlarmTime.GetHeader(), PageForTimeMode::WithoutSeconds));
+
+        MenuItem miAlarmCfg = MenuItem(i++, MenuItemType::AlarmConfig, "Alarm Config", "Configure Alarm");
+        miAlarmCfg.SetPage(new PageForAlrm(&alarm, &display, 1, 2, miAlarmCfg.GetHeader()));
+
+        MenuItem miRelay = MenuItem(i++, MenuItemType::Relay, "Relay", "Set Relay Time");
+        miRelay.SetPage(new PageForRelay(&relay, &display, 1, 2, miRelay.GetHeader()));
+
+        MenuItem miSystem = MenuItem(i++, MenuItemType::System, "System", "Configure System");
+
+        MenuItem miExit = MenuItem(i++, MenuItemType::Exit, "Exit", "Exit Menu");
+        miExit.SetPage(nullptr);
+
+        MenuItem *menuItems = new MenuItem[7]
+        {
+            miClockDate,
+            miClockTime,
+            miAlarmTime,
+            miAlarmCfg,
+            miRelay,
+            miSystem,
+            miExit
+        };
+
+        menuContent.Init(menuItems);
+    }
+
+    MenuScreen menuScreen(&display, &menuContent);
+
+    RotaryEncoder encoder(14, 15, 13);
+    encoder.Init();
+
+    PiezoSound sound(8);
+
+    // LED pin, Alarm control pin, Relay control pin
+    GPIOControl gpio(PICO_DEFAULT_LED_PIN, 6, 9);
 
     SystemThermo thermo(0.01f, 2000, 4);
     thermo.Start(); // Start the temperature reading task
 
-    MenuController menu(&clock, &alarm, &relay, &menuScreen, &display, &menuContent);
+    MenuController menu(&menuScreen);
 
     static UiTaskContext uiCtx = {
         .queue = encoder.GetEventQueue(),
